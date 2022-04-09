@@ -43,6 +43,7 @@ export async function getServerSideProps(context, res) {
     }))
     var stock = []
     if (! cached) {
+        console.log(`Downloading date for stock ${title}`)
         // Gets the latest data from yahoo finance
         const response = await fetch(`https://query1.finance.yahoo.com/v7/finance/download/${title}?period1=0&period2=2229456811&interval=1d&events=history&includeAdjustedClose=true`)
         // Reads the csv file
@@ -63,13 +64,13 @@ export async function getServerSideProps(context, res) {
                 });
             // Adds the data to the database
             let count = 0
+            connection2.query("DELETE FROM stockMeta WHERE ticker=?;",[title])
+            connection2.query("INSERT INTO stockMeta VALUES(?, ?, ?);", [title, day, (Date.now() / 1000 /60)])
             connection2.query('DELETE FROM stocks WHERE ticker=?;', [title]);
             stock.forEach(element => {
                 count ++;
-                connection2.query('INSERT INTO stocks VALUES (?, ?, ?)', [title, count, element]);
+                connection2.query('INSERT INTO stocks VALUES (?, ?, ?, ?)', [title, count, element, 0]);
             })
-            connection2.query("DELETE FROM stockMeta WHERE ticker=?;",[title])
-            connection2.query("INSERT INTO stockMeta VALUES(?, ?);", [title, day])
             connection2.end()
         }
     } else {
@@ -80,7 +81,6 @@ export async function getServerSideProps(context, res) {
                 record.forEach(element => {
                     stockData.push(parseFloat(element.close))
                 })
-                console.log(stockData)
                 resolve(stockData)
             })
         }).then((val => {return val}))
