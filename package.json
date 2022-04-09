@@ -6,14 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "production": "next build && next start"
   },
   "dependencies": {
+    "csv-parse": "~5.0.0",
     "next": "~12.1.4",
     "react": "~18.0.0",
     "react-dom": "~18.0.0",
-    "react-google-charts": "~4.0.0",
-    "csv-parse": "~5.0.0"
+    "react-google-charts": "~4.0.0"
   },
   "devDependencies": {
     "eslint": "~8.12.0",
