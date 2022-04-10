@@ -19,7 +19,7 @@ export default function Graph( { title, stock, bestBot, prediction } ) {
                 height="400px"
                 legendToggle
             />
-            <p>Stock purchase prediction is: { prediction }</p>
+            <p>Stock purchase prediction is: <d style={{color: prediction>0 ? "green" : "red"}}>{ prediction }</d></p>
         </>
     )
   }
