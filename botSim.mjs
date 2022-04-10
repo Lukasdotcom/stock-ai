@@ -62,7 +62,7 @@ export async function simulateBestBotStock(ticker, stockData) {
         if (results.length > 0) {
             if (parseInt(results[0].lastBotUpdate) != parseInt(Date.now() / 1000 / 60 / 10) && parseInt(results[0].lastBotUpdate) != 0) {
                 connection2.query("UPDATE stockMeta SET lastBotUpdate=0 WHERE ticker=?", [ticker], function() {})
-                connection2.query("SELECT * FROM bestBot", function(error, results, fields) {
+                connection2.query("SELECT * FROM bot ORDER BY earnings DESC", function(error, results, fields) {
                     // Makes sure that a bot has been trained
                     if (results.length > 0) {
                         console.log(`Updating values for bot for the stock ${ticker}`)

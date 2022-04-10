@@ -44,7 +44,7 @@ export async function getServerSideProps(context, res) {
     }))
     var stock = []
     if (! cached) {
-        console.log(`Downloading date for stock ${title}`)
+        console.log(`Downloading data for stock ${title}`)
         // Gets the latest data from yahoo finance
         const response = await fetch(`https://query1.finance.yahoo.com/v7/finance/download/${title}?period1=0&period2=2229456811&interval=1d&events=history&includeAdjustedClose=true`)
         // Reads the csv file
