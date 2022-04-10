@@ -46,7 +46,7 @@ function simulateBot(ticker, stockData, botStrategy) {
         }
         connection.query("UPDATE stocks SET bestBot=? WHERE time=? and ticker=?", [stocks * stockData[count] + money, count+1, ticker],function(error, results, fields) {})
     }
-    connection.query("UPDATE stockMeta SET lastBotUpdate=? WHERE ticker=?", [parseInt(Date.now() / 1000 / 60 / 10), ticker], function() {
+    connection.query("UPDATE stockMeta SET lastBotUpdate=?, prediction=? WHERE ticker=?", [parseInt(Date.now() / 1000 / 60 / 10), prediction(botStrategy, stockData.length, stockData), ticker], function() {
         console.log(`Finished updating values for bot for the stock ${ticker}`)
     })
 }
@@ -61,12 +61,15 @@ export async function simulateBestBotStock(ticker, stockData) {
     connection2.query("SELECT * FROM stockMeta WHERE ticker=?", [ticker], function(error, results, fields) {
         if (results.length > 0) {
             if (parseInt(results[0].lastBotUpdate) != parseInt(Date.now() / 1000 / 60 / 10) && parseInt(results[0].lastBotUpdate) != 0) {
+                // Makes sure to lock the stock to prevent uneccessary updates to the bot part
                 connection2.query("UPDATE stockMeta SET lastBotUpdate=0 WHERE ticker=?", [ticker], function() {})
                 connection2.query("SELECT * FROM bot ORDER BY earnings DESC", function(error, results, fields) {
                     // Makes sure that a bot has been trained
                     if (results.length > 0) {
                         console.log(`Updating values for bot for the stock ${ticker}`)
                         simulateBot(ticker, stockData, JSON.parse(results[0].strategy))
+                    } else { // Makes sure to show that the stock has been unlocked if there are no bots.
+                        connection2.query("UPDATE stockMeta SET lastBotUpdate=? WHERE ticker=?", [parseInt(Date.now() / 1000 / 60 / 10), ticker], function() {})
                     }
                 })
             }

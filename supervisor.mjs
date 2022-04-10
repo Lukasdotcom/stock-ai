@@ -82,7 +82,6 @@ function saveLoadMutate(botList) {
         let count = 0
         botList.forEach(element => {
             if (count < survivors) {
-                console.log(element.earnings)
                 connection.query("INSERT INTO bot VALUES (?, ?);", [JSON.stringify(element.strategy), element.earnings], function() {})
             }
             count ++
