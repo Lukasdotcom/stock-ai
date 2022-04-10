@@ -1,11 +1,12 @@
 import Chart from "react-google-charts";
 import { parse } from "csv-parse";
+import { simulateBestBotStock } from "../../botSim.mjs";
 // Creates a simple graph with all the prices of the stock
-export default function Graph( { title, stock } ) {
-    let data = [["Date", "Stock Price"]]
+export default function Graph( { title, stock, bestBot } ) {
+    let data = [["Date", "Stock Price", "Bot"]]
     let count = 0
     stock.forEach(element => {
-        data.push([count, element])
+        data.push([count, element, bestBot.length > count ? bestBot[count] : 0])
         count ++
     });
     return (
@@ -65,7 +66,7 @@ export async function getServerSideProps(context, res) {
             // Adds the data to the database
             let count = 0
             connection2.query("DELETE FROM stockMeta WHERE ticker=?;",[title])
-            connection2.query("INSERT INTO stockMeta VALUES(?, ?, ?);", [title, day, (Date.now() / 1000 /60)])
+            connection2.query("INSERT INTO stockMeta VALUES(?, ?, ?);", [title, day, 1])
             connection2.query('DELETE FROM stocks WHERE ticker=?;', [title]);
             stock.forEach(element => {
                 count ++;
@@ -85,15 +86,30 @@ export async function getServerSideProps(context, res) {
             })
         }).then((val => {return val}))
     }
+    // Gets the historical data for the best bot.
+    var bestBot = []
+    bestBot = await new Promise((resolve) => {
+        connection.query("SELECT * FROM stocks WHERE ticker=? ORDER BY time ASC", [title], function (error, results2, fields) {
+            let bestBot = []
+            let record = results2 ? results2 : []
+            record.forEach(element => {
+                bestBot.push(parseFloat(element.bestBot))
+            })
+            resolve(bestBot)
+        })
+    }).then((val => {return val}))
     connection.end();
     if (stock.length < 1) {
         return {
             notFound: true,
         }
+    } else {
+        // Checks if the best bot needs to be updated
+        simulateBestBotStock(title, stock)
     }
     return {
         props : {
-            stock, title, 
+            stock, title, bestBot,
         },
     }
 }

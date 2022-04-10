@@ -22,7 +22,7 @@ function simulateBot(stockData, botStrategy) {
             money *= 1 - order
         }
     }
-    return stocks * stockData[stockData.length - 1]
+    return stocks * stockData[stockData.length - 1] + money
 }
 // Used to mutate
 function mutate(strategy) {
@@ -35,44 +35,49 @@ function waitUntilNextGeneration() {
 // Used to mutate all the bots and kill all the weak ones
 function mutateAll() {
     connection.query(`SELECT * FROM bot ORDER BY earnings DESC LIMIT ${survivors}`, function(error, results, fields) {
-        if (results[0].stock != "") {
-            let botList = []
-            results.forEach(element => {
-                botList.push(element.strategy)
-            })
-            while (botList.length < generationSize) {
-                botList.push(JSON.stringify(mutate(JSON.parse(botList[Math.floor(Math.random() * botList.length)]))))
-            }
-            connection.query("DELETE FROM bot;", function() {})
-            botList.forEach(element => {
-                connection.query("INSERT INTO bot VALUES (?, ?, ?);", [element, 0, ""], function() {})
-            })
-            waitUntilNextGeneration()
+        connection.query("DELETE FROM bestBot;", function() {})
+        connection.query("INSERT INTO bestBot VALUES (?);", [results[0].strategy], function() {})
+        console.log(`Finished generation with highest earnings of ${results[0].earnings} on ${results[0].stock}`)
+        let botList = []
+        results.forEach(element => {
+            botList.push(element.strategy)
+        })
+        while (botList.length < generationSize) {
+            botList.push(JSON.stringify(mutate(JSON.parse(botList[Math.floor(Math.random() * botList.length)]))))
         }
+        connection.query("DELETE FROM bot;", function() {})
+        botList.forEach(element => {
+            connection.query("INSERT INTO bot VALUES (?, ?, ?);", [element, 0, ""], function() {})
+        })
+        waitUntilNextGeneration()
     })
 }
 // Will simulate a generation
 function simulateGenerations() {
     connection.query("SELECT * FROM stockMeta;", function(error, results, fields) {
-        // Picks a random stock to start of with
-        var stock = results[Math.floor(Math.random() * results.length)].ticker
-        connection.query("SELECT * FROM bot WHERE stock!=?;", [stock], function(error, results, fields) {
-            // Gets the prices for the stock
-            var stockData = []
-            var bots = results
-            connection.query("SELECT * FROM stocks WHERE ticker=?", [stock], function(error, results, fields) {
-                results.forEach(element => {
-                    stockData.push(parseFloat(element.close))
+        if (results.length > 0) {
+            // Picks a random stock to start of with
+            var stock = results[Math.floor(Math.random() * results.length)].ticker
+            connection.query("SELECT * FROM bot WHERE stock!=?;", [stock], function(error, results, fields) {
+                // Gets the prices for the stock
+                var stockData = []
+                var bots = results
+                connection.query("SELECT * FROM stocks WHERE ticker=?", [stock], function(error, results, fields) {
+                    results.forEach(element => {
+                        stockData.push(parseFloat(element.close))
+                    })
+                    // Simulates every single bot
+                    bots.forEach(element => {
+                        let strategy = JSON.parse(element.strategy);
+                        let earnings = simulateBot(stockData, strategy)
+                        connection.query("UPDATE bot SET stock=?, earnings=? WHERE strategy=?", [stock, earnings, element.strategy], function() {})
+                    })
+                    mutateAll()
                 })
-                // Simulates every single bot
-                bots.forEach(element => {
-                    let strategy = JSON.parse(element.strategy);
-                    let earnings = simulateBot(stockData, strategy)
-                    connection.query("UPDATE bot SET stock=?, earnings=? WHERE strategy=?", [stock, earnings, element.strategy], function() {})
-                })
-                mutateAll()
             })
-        })
+        } else {
+            setTimeout(simulateGenerations, 5000)
+        }
     })
 }
 
