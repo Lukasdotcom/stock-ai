@@ -1,6 +1,8 @@
 import Chart from "react-google-charts";
 import { parse } from "csv-parse";
 import { simulateBestBotStock } from "../../botSim.mjs";
+import Head from 'next/head'
+
 // Creates a simple graph with all the prices of the stock
 export default function Graph( { title, stock, bestBot, prediction } ) {
     let data = [["Date", "Stock Price", "Bot"]]
@@ -11,6 +13,9 @@ export default function Graph( { title, stock, bestBot, prediction } ) {
     });
     return (
         <>
+            <Head>
+                <title>{title}</title>
+            </Head>
             <h1>{title}</h1>
             <Chart
                 chartType="LineChart"
