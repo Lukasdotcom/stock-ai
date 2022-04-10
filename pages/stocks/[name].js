@@ -72,10 +72,17 @@ export async function getServerSideProps(context, res) {
             connection2.query("DELETE FROM stockMeta WHERE ticker=?;",[title])
             connection2.query("INSERT INTO stockMeta VALUES(?, ?, ?, ?);", [title, day, 1, 0])
             connection2.query('DELETE FROM stocks WHERE ticker=?;', [title]);
+            let queryStatement = "INSERT INTO stocks VALUES"
+            let queryParams = []
             stock.forEach(element => {
                 count ++;
-                connection2.query('INSERT INTO stocks VALUES (?, ?, ?, ?)', [title, count, element, 0]);
+                queryStatement += " (?, ?, ?, ?),"
+                queryParams.push(title)
+                queryParams.push(count)
+                queryParams.push(element)
+                queryParams.push(0)
             })
+            connection2.query(queryStatement.slice(0, queryStatement.length-1), queryParams);
             connection2.end()
         }
     } else {

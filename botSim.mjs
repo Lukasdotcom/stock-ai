@@ -32,8 +32,14 @@ function simulateBot(ticker, stockData, botStrategy) {
         password : "password",
         database : 'stock'
         });
+    // Generates a random table for speed reasons.
+    let randomTable = "temp" + Math.floor(1000 * Math.random()).toString()
+    connection.query(`DROP TABLE IF EXISTS ${randomTable}`, function() {})
+    connection.query(`CREATE TABLE ${randomTable} (time int, bestBot float)`, function() {})
     let money = stockData[startTime]
     let stocks = 0
+    let queryStatement = `INSERT INTO ${randomTable} VALUES`
+    let queryParams = []
     for (let count = startTime; count < stockData.length; count++) {
         let order = prediction(botStrategy, count, stockData)
         if (order < 0) {
@@ -44,11 +50,17 @@ function simulateBot(ticker, stockData, botStrategy) {
             stocks += money / stockData[count] * order
             money *= 1 - order
         }
-        connection.query("UPDATE stocks SET bestBot=? WHERE time=? and ticker=?", [stocks * stockData[count] + money, count+1, ticker],function(error, results, fields) {})
+        queryStatement += " (?, ?),"
+        queryParams.push(count+1, stocks * stockData[count] + money)
     }
+    connection.query(queryStatement.slice(0, queryStatement.length-1), queryParams)
+    connection.query(`UPDATE stocks SET bestBot=(SELECT bestBot FROM ${randomTable} WHERE time=stocks.time) WHERE ticker=?;`, [ticker])
+    connection.query(`UPDATE stocks SET bestBot=0 WHERE bestBot IS NULL;`)
+    connection.query(`DROP TABLE ${randomTable}`)
     connection.query("UPDATE stockMeta SET lastBotUpdate=?, prediction=? WHERE ticker=?", [parseInt(Date.now() / 1000 / 60 / 10), prediction(botStrategy, stockData.length, stockData), ticker], function() {
         console.log(`Finished updating values for bot for the stock ${ticker}`)
     })
+    connection.end()
 }
 // Will update the values for the bot of on the stock
 export async function simulateBestBotStock(ticker, stockData) {
