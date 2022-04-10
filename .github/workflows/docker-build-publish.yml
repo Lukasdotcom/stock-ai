@@ -38,4 +38,4 @@ jobs:
     - name: Run Buildx (push image)      
       if: success()      
       run: |        
-        docker buildx build --platform ${{ steps.prepare.outputs.docker_platform }} --tag ${{ steps.prepare.outputs.docker_image }}:latest --tag ${{ steps.prepare.outputs.docker_image }}:$(date --rfc-3339=date) --file Docker/Dockerfile --push .
+        docker buildx build --platform ${{ steps.prepare.outputs.docker_platform }} --tag ${{ steps.prepare.outputs.docker_image }}:latest --tag ${{ steps.prepare.outputs.docker_image }}:$(date --rfc-3339=date) --file docker/Dockerfile --push .
