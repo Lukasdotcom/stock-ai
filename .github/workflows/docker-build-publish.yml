@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-18.04    
     env:      
       DOCKER_REGISTRY: docker.io      
-      DOCKER_IMAGE: lukasdotcom/website      
+      DOCKER_IMAGE: lukasdotcom/stock-ai      
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  
       DOCKER_TARGET_PLATFORM: linux/arm64,linux/arm/v7,linux/amd64                   
