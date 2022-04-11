@@ -1,14 +1,17 @@
 import Chart from "react-google-charts";
 import { parse } from "csv-parse";
-import { simulateBestBotStock, predict } from "../../botSim.mjs"
+import { predict, simulateBot } from "../../botSim.mjs"
 import Head from 'next/head'
 
 // Creates a simple graph with all the prices of the stock
-export default function Graph( { title, stock, bestBot, prediction, newPrediction } ) {
+export default function Graph( { title, stock, botStrategy } ) {
     let data = [["Date", "Stock Price", "Bot"]]
     let count = 0
-    stock.forEach(element => {
-        data.push([count, element, bestBot.length > count ? bestBot[count] : 0])
+    const prediction = predict(botStrategy, stock.length, stock)
+    var bot = simulateBot(stock.length-500, stock, botStrategy)
+    var stock2 = stock.slice(-500)
+    stock2.forEach(element => {
+        data.push([count, element, bot.length > count ? bot[count] : 0])
         count ++
     });
     return (
@@ -24,8 +27,7 @@ export default function Graph( { title, stock, bestBot, prediction, newPredictio
                 height="400px"
                 legendToggle
             />
-            <p>Stock purchase prediction in graph above is(Only updates every day): <d style={{color: prediction>0 ? "green" : "red"}}>{ prediction }</d></p>
-            <p>Stock purchase prediction for latest bot is(Updates every load): <d style={{color: newPrediction>0 ? "green" : "red"}}>{ newPrediction }</d></p>
+            <p>Stock purchase prediction: <d style={{color: prediction>0 ? "green" : "red"}}>{ prediction }</d></p>
         </>
     )
   }
@@ -75,29 +77,24 @@ export async function getServerSideProps(context, res) {
                 });
             // Adds the data to the database
             let count = 0
-            try {
-                connection2.query("DELETE FROM stockMeta WHERE ticker=?;",[title])
-                connection2.query("INSERT INTO stockMeta VALUES(?, ?, ?, ?);", [title, day, 1, 0])
-                connection2.query('DELETE FROM stocks WHERE ticker=?;', [title]);
-                let queryStatement = "INSERT INTO stocks VALUES"
-                let queryParams = []
-                stock.forEach(element => {
-                    count ++;
-                    queryStatement += " (?, ?, ?, ?),"
-                    queryParams.push(title)
-                    queryParams.push(count)
-                    queryParams.push(element)
-                    queryParams.push(0)
-                })
-                connection2.query(queryStatement.slice(0, queryStatement.length-1), queryParams);
-                console.log(`Finished saving stock data for ${title}`)
-            } catch (err) {
-                connection2.query('DELETE FROM stockMeta WHERE ticker=?;', [title]);
-                console.log(`Failed to save stockData for ${title} with error; ${err}`)
-            }
+            connection2.query("DELETE FROM stockMeta WHERE ticker=?;",[title])
+            connection2.query("INSERT INTO stockMeta VALUES(?, ?);", [title, day])
+            connection2.query('DELETE FROM stocks WHERE ticker=?;', [title]);
+            let queryStatement = "INSERT INTO stocks VALUES"
+            let queryParams = []
+            stock.forEach(element => {
+                count ++;
+                queryStatement += " (?, ?, ?),"
+                queryParams.push(title)
+                queryParams.push(count)
+                queryParams.push(element)
+            })
+            connection2.query(queryStatement.slice(0, queryStatement.length-1), queryParams);
+            console.log(`Finished saving stock data for ${title}`)
             connection2.end()
         }
     } else {
+        // Gets the best bot to send to the client
         stock = await new Promise((resolve) => {
             connection.query("SELECT * FROM stocks WHERE ticker=? ORDER BY time ASC", [title], function (error, results2, fields) {
                 let stockData = []
@@ -110,28 +107,17 @@ export async function getServerSideProps(context, res) {
         }).then((val => {return val}))
     }
     // Gets the historical data for the best bot.
-    const newPrediction = await new Promise((resolve) => {
+    const botStrategy = await new Promise((resolve) => {
         connection.query("SELECT * FROM bot ORDER BY earnings DESC LIMIT 1", function (error, results2, fields) {
             if (results2 == undefined) {
-                resolve(0)
+                resolve([])
             } else {
                 if (results2.length > 0) {
-                    resolve(predict(JSON.parse(results2[0].strategy), stock.length, stock))
+                    resolve(JSON.parse(results2[0].strategy))
                 } else {
-                    resolve(0)
+                    return []
                 }
             }
-        })
-    }).then((val => {return val}))
-    var bestBot = []
-    bestBot = await new Promise((resolve) => {
-        connection.query("SELECT * FROM stocks WHERE ticker=? ORDER BY time ASC", [title], function (error, results2, fields) {
-            let bestBot = []
-            let record = results2 ? results2 : []
-            record.forEach(element => {
-                bestBot.push(parseFloat(element.bestBot))
-            })
-            resolve(bestBot)
         })
     }).then((val => {return val}))
     connection.end();
@@ -139,13 +125,10 @@ export async function getServerSideProps(context, res) {
         return {
             notFound: true,
         }
-    } else {
-        // Checks if the best bot needs to be updated
-        simulateBestBotStock(title, stock)
     }
     return {
         props : {
-            stock, title, bestBot, prediction, newPrediction
+            stock, title, botStrategy
         },
     }
 }
