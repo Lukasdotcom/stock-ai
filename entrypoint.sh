@@ -5,6 +5,6 @@ mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO 'stock-ai'@localhost IDENTIFIED
 mysql -u root --database=stock -e "CREATE TABLE IF NOT EXISTS stocks (ticker varchar(10), time int, close float, bestBot float);"
 mysql -u root --database=stock -e "CREATE TABLE IF NOT EXISTS stockMeta (ticker varchar(10), lastUpdate int, lastBotUpdate int, prediction float);"
 mysql -u root --database=stock -e "CREATE TABLE IF NOT EXISTS bot (strategy text, earnings float);"
-mysql -u root -database=stock -e "UPDATE stockMeta SET lastBotUpdate=1 WHERE lastBotUpdate=0;"
+mysql -u root --database=stock -e "UPDATE stockMeta SET lastBotUpdate=1 WHERE lastBotUpdate=0;"
 nodejs supervisor.mjs &
 npm run $TYPE
