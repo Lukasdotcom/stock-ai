@@ -46,7 +46,7 @@ export async function getServerSideProps(context, res) {
     })).then((val => {
         if (val && val.length > 0) {
             prediction = parseFloat(val[0].prediction)
-            return parseInt(val[0].lastUpdate) == day
+            return (parseInt(val[0].lastUpdate) == day)
         } else {
             prediction = 0
             return false
@@ -75,20 +75,26 @@ export async function getServerSideProps(context, res) {
                 });
             // Adds the data to the database
             let count = 0
-            connection2.query("DELETE FROM stockMeta WHERE ticker=?;",[title])
-            connection2.query("INSERT INTO stockMeta VALUES(?, ?, ?, ?);", [title, day, 1, 0])
-            connection2.query('DELETE FROM stocks WHERE ticker=?;', [title]);
-            let queryStatement = "INSERT INTO stocks VALUES"
-            let queryParams = []
-            stock.forEach(element => {
-                count ++;
-                queryStatement += " (?, ?, ?, ?),"
-                queryParams.push(title)
-                queryParams.push(count)
-                queryParams.push(element)
-                queryParams.push(0)
-            })
-            connection2.query(queryStatement.slice(0, queryStatement.length-1), queryParams);
+            try {
+                connection2.query("DELETE FROM stockMeta WHERE ticker=?;",[title])
+                connection2.query("INSERT INTO stockMeta VALUES(?, ?, ?, ?);", [title, day, 1, 0])
+                connection2.query('DELETE FROM stocks WHERE ticker=?;', [title]);
+                let queryStatement = "INSERT INTO stocks VALUES"
+                let queryParams = []
+                stock.forEach(element => {
+                    count ++;
+                    queryStatement += " (?, ?, ?, ?),"
+                    queryParams.push(title)
+                    queryParams.push(count)
+                    queryParams.push(element)
+                    queryParams.push(0)
+                })
+                connection2.query(queryStatement.slice(0, queryStatement.length-1), queryParams);
+                console.log(`Finished saving stock data for ${title}`)
+            } catch (err) {
+                connection2.query('DELETE FROM stockMeta WHERE ticker=?;', [title]);
+                console.log(`Failed to save stockData for ${title} with error; ${err}`)
+            }
             connection2.end()
         }
     } else {
