@@ -55,11 +55,15 @@ function simulateBot(ticker, stockData, botStrategy) {
     }
     console.log(`Finished calculating the values for bot of the stock ${ticker}`)
     // Calculates the prediction of the stock
-    connection.query("UPDATE stockMeta SET prediction=? WHERE ticker=?", [predict(botStrategy, stockData.length, stockData), ticker], function() {})
-    connection.query(queryStatement.slice(0, queryStatement.length-1), queryParams)
-    connection.query(`UPDATE stocks SET bestBot=(SELECT bestBot FROM ${randomTable} WHERE time=stocks.time) WHERE ticker=?;`, [ticker])
+    try {
+        connection.query("UPDATE stockMeta SET prediction=? WHERE ticker=?", [predict(botStrategy, stockData.length, stockData), ticker], function() {})
+        connection.query(queryStatement.slice(0, queryStatement.length-1), queryParams)
+        connection.query(`UPDATE stocks SET bestBot=(SELECT bestBot FROM ${randomTable} WHERE time=stocks.time) WHERE ticker=?;`, [ticker])
+        connection.query(`DROP TABLE ${randomTable}`)
+    } catch(err) {
+        console.log(`There was an error in updating bot values for stock; ${err.mesage}`)
+    }
     connection.query(`UPDATE stocks SET bestBot=0 WHERE bestBot IS NULL;`)
-    connection.query(`DROP TABLE ${randomTable}`)
     connection.query("UPDATE stockMeta SET lastBotUpdate=? WHERE ticker=?", [parseInt(Date.now() / 1000 / 3600 / 24), predict(botStrategy, stockData.length, stockData), ticker], function() {
         console.log(`Finished updating values for bot for the stock ${ticker}`)
     })
