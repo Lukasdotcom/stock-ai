@@ -53,6 +53,7 @@ function simulateBot(ticker, stockData, botStrategy) {
         queryStatement += " (?, ?),"
         queryParams.push(count+1, stocks * stockData[count] + money)
     }
+    console.log(`Finished calculating the values for bot of the stock ${ticker}`)
     // Calculates the prediction of the stock
     connection.query("UPDATE stockMeta SET prediction=? WHERE ticker=?", [predict(botStrategy, stockData.length, stockData), ticker], function() {})
     connection.query(queryStatement.slice(0, queryStatement.length-1), queryParams)

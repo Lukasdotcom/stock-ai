@@ -68,8 +68,6 @@ const connection = createConnection({
     password : "password",
     database : 'stock'
     });
-// Makes sure to reset the lastBotUpdate flag so it can be retriggered
-connection.query("UPDATE stockMeta SET lastBotUpdate=1 WHERE lastBotUpdate=0", function() {})
 // Makes sure that the correct amount of bots are loaded.
 function saveLoadMutate(botList) {
     if (botList == undefined) {
