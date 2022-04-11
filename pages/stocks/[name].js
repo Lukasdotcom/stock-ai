@@ -1,10 +1,10 @@
 import Chart from "react-google-charts";
 import { parse } from "csv-parse";
-import { simulateBestBotStock } from "../../botSim.mjs";
+import { simulateBestBotStock, predict } from "../../botSim.mjs"
 import Head from 'next/head'
 
 // Creates a simple graph with all the prices of the stock
-export default function Graph( { title, stock, bestBot, prediction } ) {
+export default function Graph( { title, stock, bestBot, prediction, newPrediction } ) {
     let data = [["Date", "Stock Price", "Bot"]]
     let count = 0
     stock.forEach(element => {
@@ -24,7 +24,8 @@ export default function Graph( { title, stock, bestBot, prediction } ) {
                 height="400px"
                 legendToggle
             />
-            <p>Stock purchase prediction is: <d style={{color: prediction>0 ? "green" : "red"}}>{ prediction }</d></p>
+            <p>Stock purchase prediction in graph above is(Only updates every day): <d style={{color: prediction>0 ? "green" : "red"}}>{ prediction }</d></p>
+            <p>Stock purchase prediction for latest bot is(Updates every load): <d style={{color: newPrediction>0 ? "green" : "red"}}>{ newPrediction }</d></p>
         </>
     )
   }
@@ -103,6 +104,19 @@ export async function getServerSideProps(context, res) {
         }).then((val => {return val}))
     }
     // Gets the historical data for the best bot.
+    const newPrediction = await new Promise((resolve) => {
+        connection.query("SELECT * FROM bot ORDER BY earnings DESC LIMIT 1", function (error, results2, fields) {
+            if (results2 == undefined) {
+                resolve(0)
+            } else {
+                if (results2.length > 0) {
+                    resolve(predict(JSON.parse(results2[0].strategy), stock.length, stock))
+                } else {
+                    resolve(0)
+                }
+            }
+        })
+    }).then((val => {return val}))
     var bestBot = []
     bestBot = await new Promise((resolve) => {
         connection.query("SELECT * FROM stocks WHERE ticker=? ORDER BY time ASC", [title], function (error, results2, fields) {
@@ -125,7 +139,7 @@ export async function getServerSideProps(context, res) {
     }
     return {
         props : {
-            stock, title, bestBot, prediction,
+            stock, title, bestBot, prediction, newPrediction
         },
     }
 }

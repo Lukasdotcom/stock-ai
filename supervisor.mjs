@@ -1,4 +1,4 @@
-import { prediction } from "./botSim.mjs";
+import { predict } from "./botSim.mjs"
 import { createConnection } from "mysql"
 
 // Config
@@ -13,7 +13,7 @@ function simulateBot(stockData, botStrategy) {
     let money = stockData[startTime]
     let stocks = 0
     for (let count = startTime; count < stockData.length; count++) {
-        let order = prediction(botStrategy, count, stockData)
+        let order = predict(botStrategy, count, stockData)
         if (order < 0) {
             order *= -1
             money += stocks * stockData[count] * order
