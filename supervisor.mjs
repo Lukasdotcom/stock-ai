@@ -1,18 +1,12 @@
 import { predict } from "./botSim.mjs"
 import { createConnection } from "mysql"
+import { generation_size, max_change_generation, survivors, start_time, time_between_generations, AI_size } from "./enviromental.mjs"
 
-// Config
-const generationSize = 100
-const maxChangeGeneration = 1
-const survivors = 10
-const startTime = 50
-const timeBetweenGenerations = 333
-const AISize = 100
 // Will simulate a bot and return the amount of money the bot would have earned.
 function simulateBot(stockData, botStrategy) {
-    let money = stockData[startTime]
+    let money = stockData[start_time]
     let stocks = 0
-    for (let count = startTime; count < stockData.length; count++) {
+    for (let count = start_time; count < stockData.length; count++) {
         let order = predict(botStrategy, count, stockData)
         if (order < 0) {
             order *= -1
@@ -27,11 +21,11 @@ function simulateBot(stockData, botStrategy) {
 }
 // Used to mutate
 function mutate(strategy) {
-    return strategy.map(element => element + ((Math.random()) - 0.5) * 2 * maxChangeGeneration)
+    return strategy.map(element => element + ((Math.random()) - 0.5) * 2 * max_change_generation)
 }
 // Will simulate a generation
 function simulateGenerations(bots) {
-    while (bots.length < generationSize) {
+    while (bots.length < generation_size) {
         bots.push({"strategy" : mutate(bots[Math.floor(Math.random() * bots.length)].strategy), "earnings" : 0})
     }
     connection.query("SELECT * FROM stockMeta;", function(error, results, fields) {
@@ -54,7 +48,7 @@ function simulateGenerations(bots) {
                 }
                 // Waits until the next generation
                 console.log(`Finished generation with highest earnings of ${bots[0].earnings} on ${stock}`)
-                setTimeout(function() {saveLoadMutate(bots)}, timeBetweenGenerations)
+                setTimeout(function() {saveLoadMutate(bots)}, time_between_generations)
             })
         } else {
             setTimeout(function() {simulateGenerations(bots)}, 5000)
@@ -88,11 +82,11 @@ function saveLoadMutate(botList) {
         })
     }
     if (botList.length < survivors) {
-        for (let index = 0; index < generationSize - botList.length; index++) {
-            botList.push({ "strategy" : mutate(Array(AISize).fill(0)), "earnings" : 0})
+        for (let index = 0; index < generation_size - botList.length; index++) {
+            botList.push({ "strategy" : mutate(Array(AI_size).fill(0)), "earnings" : 0})
         }
     } else if (botList.length > survivors) {
-        for (let index = 0; index < botList.length - generationSize; index++) {
+        for (let index = 0; index < botList.length - generation_size; index++) {
             botList.pop()
         }
     }

@@ -8,7 +8,10 @@ export default function Graph( { title, stock, botStrategy } ) {
     let data = [["Date", "Stock Price", "Bot"]]
     let count = 0
     const prediction = predict(botStrategy, stock.length, stock)
-    var bot = simulateBot(stock.length-500, stock, botStrategy)
+    var bot = Array(500).fill(0)
+    if (botStrategy.length > 0) {
+        bot = simulateBot(stock.length-500, stock, botStrategy)
+    }
     var stock2 = stock.slice(-500)
     stock2.forEach(element => {
         data.push([count, element, bot.length > count ? bot[count] : 0])
@@ -115,7 +118,7 @@ export async function getServerSideProps(context, res) {
                 if (results2.length > 0) {
                     resolve(JSON.parse(results2[0].strategy))
                 } else {
-                    return []
+                    resolve([])
                 }
             }
         })
