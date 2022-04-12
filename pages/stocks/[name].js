@@ -4,17 +4,22 @@ import { predict, simulateBot } from "../../botSim.mjs"
 import Head from 'next/head'
 
 // Creates a simple graph with all the prices of the stock
-export default function Graph( { title, stock, botStrategy } ) {
-    let data = [["Date", "Stock Price", "Bot"]]
+export default function Graph( { title, stock, botStrategy, specificBotStrategy } ) {
+    let data = [["Date", "Stock Price", "Bot", "Specific Bot"]]
     let count = 0
     const prediction = predict(botStrategy, stock.length, stock)
+    const specificPrediction = predict(specificBotStrategy, stock.length, stock)
     var bot = Array(500).fill(0)
     if (botStrategy.length > 0) {
         bot = simulateBot(stock.length-500, stock, botStrategy)
     }
+    var specificBot = Array(500).fill(0)
+    if (specificBotStrategy.length > 0) {
+        specificBot = simulateBot(stock.length-500, stock, specificBotStrategy)
+    }
     var stock2 = stock.slice(-500)
     stock2.forEach(element => {
-        data.push([count, element, bot.length > count ? bot[count] : 0])
+        data.push([count, element, bot.length > count ? bot[count] : 0, specificBot.length > count ? specificBot[count] : 0])
         count ++
     });
     return (
@@ -31,6 +36,7 @@ export default function Graph( { title, stock, botStrategy } ) {
                 legendToggle
             />
             <p>Stock purchase prediction: <d style={{color: prediction>0 ? "green" : "red"}}>{ prediction }</d></p>
+            <p>Specific stock purchase prediction: <d style={{color: specificPrediction>0 ? "green" : "red"}}>{ specificPrediction }</d></p>
         </>
     )
   }
@@ -58,6 +64,34 @@ export async function getServerSideProps(context, res) {
         }
     }))
     var stock = []
+    // Gets the specific bot strategy
+    const specificBotStrategy = await new Promise((resolve) => {
+        connection.query("SELECT * FROM stockMeta WHERE ticker=?", [title], function (error, results2, fields) {
+            if (results2 == undefined) {
+                resolve([])
+            } else {
+                if (results2.length > 0) {
+                    resolve(JSON.parse(results2[0].bestBot))
+                } else {
+                    resolve([])
+                }
+            }
+        })
+    }).then((val => {return val}))
+    // Gets the best bot.
+    const botStrategy = await new Promise((resolve) => {
+        connection.query("SELECT * FROM bot ORDER BY earnings DESC LIMIT 1", function (error, results2, fields) {
+            if (results2 == undefined) {
+                resolve([])
+            } else {
+                if (results2.length > 0) {
+                    resolve(JSON.parse(results2[0].strategy))
+                } else {
+                    resolve([])
+                }
+            }
+        })
+    }).then((val => {return val}))
     if (! cached) {
         console.log(`Downloading data for stock ${title}`)
         // Gets the latest data from yahoo finance
@@ -81,7 +115,7 @@ export async function getServerSideProps(context, res) {
             // Adds the data to the database
             let count = 0
             connection2.query("DELETE FROM stockMeta WHERE ticker=?;",[title])
-            connection2.query("INSERT INTO stockMeta VALUES(?, ?);", [title, day])
+            connection2.query("INSERT INTO stockMeta VALUES(?, ?, ?);", [title, day, "[]"])
             connection2.query('DELETE FROM stocks WHERE ticker=?;', [title]);
             let queryStatement = "INSERT INTO stocks VALUES"
             let queryParams = []
@@ -97,7 +131,7 @@ export async function getServerSideProps(context, res) {
             connection2.end()
         }
     } else {
-        // Gets the best bot to send to the client
+        // Gets the stock data
         stock = await new Promise((resolve) => {
             connection.query("SELECT * FROM stocks WHERE ticker=? ORDER BY time ASC", [title], function (error, results2, fields) {
                 let stockData = []
@@ -109,20 +143,6 @@ export async function getServerSideProps(context, res) {
             })
         }).then((val => {return val}))
     }
-    // Gets the historical data for the best bot.
-    const botStrategy = await new Promise((resolve) => {
-        connection.query("SELECT * FROM bot ORDER BY earnings DESC LIMIT 1", function (error, results2, fields) {
-            if (results2 == undefined) {
-                resolve([])
-            } else {
-                if (results2.length > 0) {
-                    resolve(JSON.parse(results2[0].strategy))
-                } else {
-                    resolve([])
-                }
-            }
-        })
-    }).then((val => {return val}))
     connection.end();
     if (stock.length < 1) {
         return {
@@ -131,7 +151,7 @@ export async function getServerSideProps(context, res) {
     }
     return {
         props : {
-            stock, title, botStrategy
+            stock, title, botStrategy, specificBotStrategy
         },
     }
 }

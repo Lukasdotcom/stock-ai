@@ -49,6 +49,8 @@ function simulateGenerations(bots) {
                 // Waits until the next generation
                 console.log(`Finished generation with highest earnings of ${bots[0].earnings} on ${stock}`)
                 setTimeout(function() {saveLoadMutate(bots)}, time_between_generations)
+                // Makes sure to set the last specifically trained bot
+                connection.query("UPDATE stockMeta SET bestBot=? WHERE ticker=?;", [JSON.stringify(bots[0].strategy), stock], function() {})
             })
         } else {
             setTimeout(function() {simulateGenerations(bots)}, 5000)
