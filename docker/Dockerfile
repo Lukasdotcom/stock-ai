@@ -13,5 +13,14 @@ WORKDIR /var/www
 RUN git clone https://github.com/Lukasdotcom/stock-ai
 WORKDIR /var/www/stock-ai
 RUN npm install
+# Sets the default configuration
+ENV TYPE=production
+ENV GENERATION_SIZE=100
+ENV MAX_CHANGE_GENERATION=0.3
+ENV SURVIVORS=10
+ENV START_TIME=50
+ENV TIME_BETWEEN_GENERATIONS=300
+ENV AI_SIZE=100
+ENV GENERATION_PER_STOCK=3
 CMD ./entrypoint.sh
 EXPOSE 3000
