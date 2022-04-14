@@ -2,26 +2,33 @@ import Chart from "react-google-charts";
 import { parse } from "csv-parse";
 import { predict, simulateBot } from "../../botSim.mjs"
 import Head from 'next/head'
+import { useState } from "react";
 
 // Creates a simple graph with all the prices of the stock
-export default function Graph( { title, stock, botStrategy, specificBotStrategy } ) {
+function Graph( { title, stock, botStrategy, specificBotStrategy, startGraphSize } ) {
     let data = [["Date", "Stock Price", "Bot", "Specific Bot"]]
     let count = 0
     const prediction = predict(botStrategy, stock.length, stock)
     const specificPrediction = predict(specificBotStrategy, stock.length, stock)
-    var bot = Array(500).fill(0)
+    const [graphSize, setGraphSize] = useState(startGraphSize);
+    // Makes sure that the graph has a valid value for its starting value
+    const actualGraphSize = graphSize < stock.length ? (graphSize < 1 ? 1 : graphSize) : stock.length - 1
+    // Calculates the simple bots values
+    var bot = Array(actualGraphSize).fill(0)
     if (botStrategy.length > 0) {
-        bot = simulateBot(stock.length-500, stock, botStrategy)
+        bot = simulateBot(stock.length-actualGraphSize, stock, botStrategy)
     }
-    var specificBot = Array(500).fill(0)
+     // Calculates the specific bots values
+    var specificBot = Array(actualGraphSize).fill(0)
     if (specificBotStrategy.length > 0) {
-        specificBot = simulateBot(stock.length-500, stock, specificBotStrategy)
+        specificBot = simulateBot(stock.length-actualGraphSize, stock, specificBotStrategy)
     }
-    var stock2 = stock.slice(-500)
+    // Takes out the unneccessary stock value
+    var stock2 = stock.slice(-actualGraphSize)
     stock2.forEach(element => {
         data.push([count, element, bot.length > count ? bot[count] : 0, specificBot.length > count ? specificBot[count] : 0])
         count ++
-    });
+    })
     return (
         <>
             <Head>
@@ -35,6 +42,9 @@ export default function Graph( { title, stock, botStrategy, specificBotStrategy 
                 height="400px"
                 legendToggle
             />
+            <h3>Set Number of Days for Graph</h3>
+            <p>Warning it is very laggy when you scroll very far to the right side on the slider. Please click on the slider and don't slide.</p>
+            <input type={"range"} style={{width: "100%"}} min={1} value={actualGraphSize} max={stock.length - 1} onChange={(val) => {setGraphSize(val.target.valueAsNumber)}}></input>
             <p>Stock purchase prediction: <d style={{color: prediction>0 ? "green" : "red"}}>{ prediction }</d></p>
             <p>Specific stock purchase prediction: <d style={{color: specificPrediction>0 ? "green" : "red"}}>{ specificPrediction }</d></p>
         </>
@@ -149,9 +159,11 @@ export async function getServerSideProps(context, res) {
             notFound: true,
         }
     }
+    const startGraphSize = 500
     return {
         props : {
-            stock, title, botStrategy, specificBotStrategy
+            stock, title, botStrategy, specificBotStrategy, startGraphSize,
         },
     }
 }
+export default Graph

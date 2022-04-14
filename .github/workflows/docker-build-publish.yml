@@ -1,8 +1,6 @@
 name: Docker Build/Publish Image
 
 on:
-  schedule:
-  - cron: "0 2 * * 0"
   push:
     branches: [ master ]
   workflow_dispatch:
