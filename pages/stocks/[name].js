@@ -43,7 +43,7 @@ function Graph( { title, stock, botStrategy, specificBotStrategy, startGraphSize
                 legendToggle
             />
             <h3>Set Number of Days for Graph</h3>
-            <p>Warning it is very laggy when you scroll very far to the right side on the slider. Please click on the slider and don't slide.</p>
+            <p>Warning it is very laggy when you scroll very far to the right side on the slider. Please click on the slider and don&apos;t slide.</p>
             <input type={"range"} style={{width: "100%"}} min={1} value={actualGraphSize} max={stock.length - 1} onChange={(val) => {setGraphSize(val.target.valueAsNumber)}}></input>
             <p>Stock purchase prediction: <d style={{color: prediction>0 ? "green" : "red"}}>{ prediction }</d></p>
             <p>Specific stock purchase prediction: <d style={{color: specificPrediction>0 ? "green" : "red"}}>{ specificPrediction }</d></p>
