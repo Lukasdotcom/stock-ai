@@ -1,0 +1,45 @@
+.wrapper{
+    max-width: 450px;
+}
+
+.wrapper .searchInput{
+    width: 100%;
+    border-radius: 5px;
+    position: relative;
+}
+
+.searchInput input{
+    width: 100%;
+    height: 40px;
+    outline: none;
+    border: none;
+    border-radius: 5px;
+    font-size: 18px;
+}
+
+.searchInput input{
+  border-radius: 5px 5px 0 0;
+}
+
+.searchInput .autocom{
+  overflow-y: auto;
+  opacity: 1;
+  pointer-events: auto;
+  background: gray;
+  list-style: none;
+  width: 100%;
+  cursor: default;
+  border-radius: 3px;
+  margin-top: 10px;
+  padding: 0px;
+}
+
+.autocom li:hover{
+  background: blue;
+}
+
+.autocom li a{
+    font-size: 25px;
+    z-index: -1;
+    margin: 0px;
+}

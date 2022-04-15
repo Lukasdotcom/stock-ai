@@ -34,7 +34,7 @@ function Graph( { title, stock, botStrategy, specificBotStrategy, startGraphSize
             <Head>
                 <title>{title}</title>
             </Head>
-            <h1>{title}</h1>
+            <h1 style={{height: "80px"}}>{title}</h1>
             <Chart
                 chartType="LineChart"
                 data={data}

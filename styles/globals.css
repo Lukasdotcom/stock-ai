@@ -22,3 +22,15 @@ a {
   align-items: center;
   justify-content: center;
 }
+
+button {
+  color:white;
+  background-color: black;
+  border: 2px solid black;
+  border-radius: 10px;
+}
+
+button:hover {
+  background-color: rgb(55, 55, 255);
+  color: black;
+}
