@@ -25,39 +25,52 @@ function mutate(strategy) {
 }
 // Will simulate a generation
 function simulateGenerations(bots) {
-    connection.query("SELECT * FROM stockMeta;", function(error, results, fields) {
-        if (results.length > 0) {
-            // Picks a random stock to start of with
-            var stock = results[Math.floor(Math.random() * results.length)].ticker
-            // Gets the data for the stock
-            connection.query("SELECT * FROM stocks WHERE ticker=?", [stock], function(error, results, fields) {
-                for (let index = 0; index < generation_per_stock; index++) {
-                    while (bots.length < generation_size) {
-                        bots.push({"strategy" : mutate(bots[Math.floor(Math.random() * bots.length)].strategy), "earnings" : 0})
+    const stock = new Promise((resolve, reject) => {
+        // Checks if there is a stock that does not have a prediction on it.
+        connection.query("SELECT * FROM stockMeta WHERE bestBot='[]';", function(error, results, fields) {
+            if (results.length > 0) {
+                // Picks a random stock to start of with
+                resolve(results[Math.floor(Math.random() * results.length)].ticker)
+                // Gets the data for the stock
+            } else {
+                // Finds a random stock
+                connection.query("SELECT * FROM stockMeta", function(error, results, fields) {
+                    if (results.length > 0) {
+                        // Picks a random stock to start of with
+                        resolve(results[Math.floor(Math.random() * results.length)].ticker)
+                        // Gets the data for the stock
+                    } else {
+                        reject()
                     }
-                    var stockData = []
-                    results.forEach(element => {
-                        stockData.push(parseFloat(element.close))
-                    })
-                    // Simulates every single bot
-                    for (let i = 0; i < bots.length; i++) {
-                        bots[i].earnings = simulateBot(stockData, bots[i].strategy)
-                    }
-                    bots.sort(function(a, b) {return b.earnings - a.earnings});
-                    while(bots.length > survivors) {
-                        bots.pop()
-                    }
-                }
-                // Waits until the next generation
-                console.log(`Finished ${generation_per_stock} generation${generation_per_stock > 1 ? "s" : ""} with highest earnings of ${bots[0].earnings} on ${stock}`)
-                saveLoad(bots)
-                // Makes sure to set the last specifically trained bot
-                connection.query("UPDATE stockMeta SET bestBot=? WHERE ticker=?;", [JSON.stringify(bots[0].strategy), stock], function() {})
-            })
-        } else {
-            setTimeout(function() {simulateGenerations(bots)}, time_between_generations)
+                })
+            }
         }
-    })
+    )}).then((stock) => {
+        connection.query("SELECT * FROM stocks WHERE ticker=?", [stock], function(error, results, fields) {
+            for (let index = 0; index < generation_per_stock; index++) {
+                while (bots.length < generation_size) {
+                    bots.push({"strategy" : mutate(bots[Math.floor(Math.random() * bots.length)].strategy), "earnings" : 0})
+                }
+                var stockData = []
+                results.forEach(element => {
+                    stockData.push(parseFloat(element.close))
+                })
+                // Simulates every single bot
+                for (let i = 0; i < bots.length; i++) {
+                    bots[i].earnings = simulateBot(stockData, bots[i].strategy)
+                }
+                bots.sort(function(a, b) {return b.earnings - a.earnings});
+                while(bots.length > survivors) {
+                    bots.pop()
+                }
+            }
+            // Waits until the next generation
+            console.log(`Finished ${generation_per_stock} generation${generation_per_stock > 1 ? "s" : ""} with highest earnings of ${bots[0].earnings} on ${stock}`)
+            saveLoad(bots)
+            // Makes sure to set the last specifically trained bot
+            connection.query("UPDATE stockMeta SET bestBot=? WHERE ticker=?;", [JSON.stringify(bots[0].strategy), stock], function() {})
+        })
+    }).catch((val) => {setTimeout(function() {simulateGenerations(bots)}, time_between_generations)})
 }
 
 const connection = createConnection({
