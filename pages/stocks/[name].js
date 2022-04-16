@@ -1,13 +1,30 @@
-import Chart from "react-google-charts";
 import { parse } from "csv-parse";
 import { predict, simulateBot } from "../../botSim.mjs"
 import Head from 'next/head'
 import { useState } from "react";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+} from 'chart.js';
 
+import { Line } from 'react-chartjs-2';
+ChartJS.register(
+CategoryScale,
+LinearScale,
+PointElement,
+LineElement,
+Title,
+Tooltip,
+Legend
+);
 // Creates a simple graph with all the prices of the stock
 function Graph( { title, stock, botStrategy, specificBotStrategy, startGraphSize } ) {
-    let data = [["Date", "Stock Price", "Bot", "Specific Bot"]]
-    let count = 0
     const prediction = predict(botStrategy, stock.length, stock)
     const specificPrediction = predict(specificBotStrategy, stock.length, stock)
     const [graphSize, setGraphSize] = useState(startGraphSize);
@@ -25,22 +42,83 @@ function Graph( { title, stock, botStrategy, specificBotStrategy, startGraphSize
     }
     // Takes out the unneccessary stock value
     var stock2 = stock.slice(-actualGraphSize)
+    var labels = []
+    let count = 0
+    var botRatio = []
+    var specificBotRatio = []
+    // Calculates the rato of stock price to bot value
     stock2.forEach(element => {
-        data.push([count, element, bot.length > count ? bot[count] : 0, specificBot.length > count ? specificBot[count] : 0])
+        labels.push(count)
+        botRatio.push(bot[count] / element)
+        specificBotRatio.push(specificBot[count] / element)
         count ++
     })
+    const data = {
+        labels: labels,
+        datasets: [{
+            label : "Stock Price",
+            backroundColor: 'rgb(255,0,0)',
+            borderColor: 'rgb(255,0,0)',
+            pointRadius: 0,
+            data: stock2
+        },
+        {
+            label : "General Bot",
+            backroundColor: 'rgb(0,255,0)',
+            borderColor: 'rgb(0,255,0)',
+            pointRadius: 0,
+            data: bot
+        },
+        {
+            label : "Specific Bot",
+            backroundColor: 'rgb(0,0,255)',
+            borderColor: 'rgb(0,0,255)',
+            pointRadius: 0,
+            data: specificBot
+        }
+        ]
+    }
+    const data2 = {
+        labels: labels,
+        datasets: [
+        {
+            label : "General Bot",
+            backroundColor: 'rgb(0,255,0)',
+            borderColor: 'rgb(0,255,0)',
+            pointRadius: 0,
+            data: botRatio
+        },
+        {
+            label : "Specific Bot",
+            backroundColor: 'rgb(0,0,255)',
+            borderColor: 'rgb(0,0,255)',
+            pointRadius: 0,
+            data: specificBotRatio
+        }
+        ]
+    }
+    const options = {
+        animations: false
+      }
     return (
         <>
             <Head>
                 <title>{title}</title>
             </Head>
             <h1 style={{height: "80px"}}>{title}</h1>
-            <Chart
-                chartType="LineChart"
+            <h2>Stock Price and Bot Value</h2>
+            <Line
                 data={data}
-                width="100%"
-                height="400px"
-                legendToggle
+                options={options}
+                height="50px"
+                
+            />
+            <h2>Ratio of Stock Price to Bot Values</h2>
+            <Line
+                data={data2}
+                options={options}
+                height="50px"
+                
             />
             <h3>Set Number of Days for Graph</h3>
             <p>Warning it is very laggy when you scroll very far to the right side on the slider. Please click on the slider and don&apos;t slide.</p>
