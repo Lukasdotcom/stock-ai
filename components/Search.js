@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import searchStyles from '../styles/Search.module.css'
 import { useState } from "react";
+import Router from 'next/router'
 
 const Layout = () => {
     async function search(val) {
@@ -16,12 +17,17 @@ const Layout = () => {
         setSearchResult(newSearchResult)
     }
     const [searchResult, setSearchResult] = useState([]);
-    const [searchTerm, setNewSearchTerm] = useState("DUMMY");
+    const [searchTerm, setNewSearchTerm] = useState("");
     return (
     <>
         <wrapper className={searchStyles.wrapper}>
         <div className={searchStyles.searchInput}>
-            <input type={"text"} value={searchTerm} placeholder={"Type Here to Search..."} onClick={(val) => {search(val.target.value)}} onChange={(val) => {search(val.target.value)}}></input>
+            <input type={"text"} value={searchTerm} 
+            onKeyPress={(val) => {/*Checks if enter key was pressed to go to the first result shown in the search*/if (val.code == "Enter" && searchResult.length > 0) {Router.push(`/stocks/${searchResult[0].symbol}`); setSearchResult([])}}} 
+            placeholder={"Type Here to Search..."} 
+            onClick={(val) => {search(val.target.value)}} 
+            onChange={(val) => {search(val.target.value)}}>
+            </input>
             {searchResult.length > 0 ? <ul className={searchStyles.autocom}>
                 {searchResult.map((result) => (<li onClick={() => {setSearchResult([])}} key={result.symbol}><Link href={`/stocks/${result.symbol}`}>{`${result.shortname} - ${result.symbol}`}</Link></li>))}
             </ul> : ""}
