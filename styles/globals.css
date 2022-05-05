@@ -25,7 +25,7 @@ a {
 
 button {
   color:white;
-  background-color: black;
+  background-color: rgb(0, 0, 255);
   border: 2px solid black;
   border-radius: 10px;
 }

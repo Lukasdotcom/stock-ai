@@ -6,6 +6,7 @@ const Layout = () => {
     return (
         <nav className={navStyles.nav}>
             <Link href='/'>Home</Link>
+            <Link href='/admin'>Admin</Link>
             <Search />
         </nav>
     )
