@@ -24,33 +24,41 @@ Tooltip,
 Legend
 );
 // Creates a simple graph with all the prices of the stock
-function Graph( { title, stock, botStrategy, specificBotStrategy, startGraphSize } ) {
-    const prediction = predict(botStrategy, stock.length, stock)
-    const specificPrediction = predict(specificBotStrategy, stock.length, stock)
+function Graph( { title, stock, primaryBotStrategy, secondaryBotStrategy, tertiaryBotStrategy, startGraphSize } ) {
+    const primaryPrediciton = predict(primaryBotStrategy, stock.length, stock)
+    const secondaryPrediction = predict(secondaryBotStrategy, stock.length, stock)
+    const tertiaryPrediction = predict(tertiaryBotStrategy, stock.length, stock)
     const [graphSize, setGraphSize] = useState(startGraphSize);
     // Makes sure that the graph has a valid value for its starting value
     const actualGraphSize = graphSize < stock.length ? (graphSize < 1 ? 1 : graphSize) : stock.length - 1
-    // Calculates the simple bots values
-    var bot = Array(actualGraphSize).fill(0)
-    if (botStrategy.length > 0) {
-        bot = simulateBot(stock.length-actualGraphSize, stock, botStrategy)
+    // Calculates the primary bots values
+    var primaryBot = Array(actualGraphSize).fill(0)
+    if (primaryBotStrategy.length > 0) {
+        primaryBot = simulateBot(stock.length-actualGraphSize, stock, primaryBotStrategy)
     }
-     // Calculates the specific bots values
-    var specificBot = Array(actualGraphSize).fill(0)
-    if (specificBotStrategy.length > 0) {
-        specificBot = simulateBot(stock.length-actualGraphSize, stock, specificBotStrategy)
+    // Calculates the secondary bots values
+    var secondaryBot = Array(actualGraphSize).fill(0)
+    if (secondaryBotStrategy.length > 0) {
+        secondaryBot = simulateBot(stock.length-actualGraphSize, stock, secondaryBotStrategy)
+    }
+    // Calculates the tertiary bots values
+    var tertiaryBot = Array(actualGraphSize).fill(0)
+    if (tertiaryBotStrategy.length > 0) {
+        tertiaryBot = simulateBot(stock.length-actualGraphSize, stock, tertiaryBotStrategy)
     }
     // Takes out the unneccessary stock value
     var stock2 = stock.slice(-actualGraphSize)
     var labels = []
     let count = 0
-    var botRatio = []
-    var specificBotRatio = []
+    var primaryBotRatio = []
+    var secondaryBotRatio = []
+    var tertiaryBotRatio = []
     // Calculates the rato of stock price to bot value
     stock2.forEach(element => {
         labels.push(count)
-        botRatio.push(bot[count] / element)
-        specificBotRatio.push(specificBot[count] / element)
+        primaryBotRatio.push(primaryBot[count] / element)
+        secondaryBotRatio.push(secondaryBot[count] / element)
+        tertiaryBotRatio.push(tertiaryBot[count] /element)
         count ++
     })
     const data = {
@@ -63,38 +71,52 @@ function Graph( { title, stock, botStrategy, specificBotStrategy, startGraphSize
             data: stock2
         },
         {
-            label : "General Bot",
+            label : "Primary Bot",
             backroundColor: 'rgb(0,255,0)',
             borderColor: 'rgb(0,255,0)',
             pointRadius: 0,
-            data: bot
+            data: primaryBot
         },
         {
-            label : "Specific Bot",
+            label : "Secondary Bot Bot",
+            backroundColor: 'rgb(0,255,255)',
+            borderColor: 'rgb(0,255,255)',
+            pointRadius: 0,
+            data: secondaryBot
+        },
+        {
+            label : "Tertiary Bot",
             backroundColor: 'rgb(0,0,255)',
             borderColor: 'rgb(0,0,255)',
             pointRadius: 0,
-            data: specificBot
+            data: tertiaryBot
         }
         ]
     }
     const data2 = {
         labels: labels,
         datasets: [
-        {
-            label : "General Bot",
-            backroundColor: 'rgb(0,255,0)',
-            borderColor: 'rgb(0,255,0)',
-            pointRadius: 0,
-            data: botRatio
-        },
-        {
-            label : "Specific Bot",
-            backroundColor: 'rgb(0,0,255)',
-            borderColor: 'rgb(0,0,255)',
-            pointRadius: 0,
-            data: specificBotRatio
-        }
+            {
+                label : "Primary Bot",
+                backroundColor: 'rgb(0,255,0)',
+                borderColor: 'rgb(0,255,0)',
+                pointRadius: 0,
+                data: primaryBotRatio
+            },
+            {
+                label : "Secondary Bot Bot",
+                backroundColor: 'rgb(0,255,255)',
+                borderColor: 'rgb(0,255,255)',
+                pointRadius: 0,
+                data: secondaryBotRatio
+            },
+            {
+                label : "Tertiary Bot",
+                backroundColor: 'rgb(0,0,255)',
+                borderColor: 'rgb(0,0,255)',
+                pointRadius: 0,
+                data: tertiaryBotRatio
+            }
         ]
     }
     const options = {
@@ -123,8 +145,9 @@ function Graph( { title, stock, botStrategy, specificBotStrategy, startGraphSize
             <h3>Set Number of Days for Graph</h3>
             <p>Warning it is very laggy when you scroll very far to the right side on the slider. Please click on the slider and don&apos;t slide.</p>
             <input type={"range"} style={{width: "100%"}} min={1} value={actualGraphSize} max={stock.length - 1} onChange={(val) => {setGraphSize(val.target.valueAsNumber)}}></input>
-            <p>Stock purchase prediction: <d style={{color: prediction>0 ? "green" : "red"}}>{ prediction }</d></p>
-            <p>Specific stock purchase prediction: <d style={{color: specificPrediction>0 ? "green" : "red"}}>{ specificPrediction }</d></p>
+            <p>Primary Bot purchase prediction: <d style={{color: primaryPrediciton>0 ? "green" : "red"}}>{ primaryPrediciton }</d></p>
+            <p>Secondary Bot purchase prediction: <d style={{color: secondaryPrediction>0 ? "green" : "red"}}>{ secondaryPrediction }</d></p>
+            <p>Tertiary Bot purchase prediction: <d style={{color: tertiaryPrediction>0 ? "green" : "red"}}>{ tertiaryPrediction }</d></p>
         </>
     )
   }
@@ -152,34 +175,7 @@ export async function getServerSideProps(context, res) {
         }
     }))
     var stock = []
-    // Gets the specific bot strategy
-    const specificBotStrategy = await new Promise((resolve) => {
-        connection.query("SELECT * FROM stockMeta WHERE ticker=?", [title], function (error, results2, fields) {
-            if (results2 == undefined) {
-                resolve([])
-            } else {
-                if (results2.length > 0) {
-                    resolve(JSON.parse(results2[0].bestBot))
-                } else {
-                    resolve([])
-                }
-            }
-        })
-    }).then((val => {return val}))
-    // Gets the best bot.
-    const botStrategy = await new Promise((resolve) => {
-        connection.query("SELECT * FROM bot ORDER BY earnings DESC LIMIT 1", function (error, results2, fields) {
-            if (results2 == undefined) {
-                resolve([])
-            } else {
-                if (results2.length > 0) {
-                    resolve(JSON.parse(results2[0].strategy))
-                } else {
-                    resolve([])
-                }
-            }
-        })
-    }).then((val => {return val}))
+    // Gets all the bot strategies
     if (! cached) {
         console.log(`Downloading data for stock ${title}`)
         // Gets the latest data from yahoo finance
@@ -202,8 +198,7 @@ export async function getServerSideProps(context, res) {
                 });
             // Adds the data to the database
             let count = 0
-            connection2.query("DELETE FROM stockMeta WHERE ticker=?;",[title])
-            connection2.query("INSERT INTO stockMeta VALUES(?, ?, ?);", [title, day, "[]"])
+            connection2.query("INSERT INTO stockMeta VALUES (?, ?, '', '', '') ON DUPLICATE KEY UPDATE lastUpdate=?;", [title, day, day])
             connection2.query('DELETE FROM stocks WHERE ticker=?;', [title]);
             let queryStatement = "INSERT INTO stocks VALUES"
             let queryParams = []
@@ -231,6 +226,52 @@ export async function getServerSideProps(context, res) {
             })
         }).then((val => {return val}))
     }
+    // Gets the bot data
+    const bots = await new Promise((resolve) => {
+        connection.query("SELECT * FROM stockMeta WHERE ticker=?", [title], function (error, results2, fields) {
+            if (results2.length > 0) {
+                resolve([results2[0].primaryBot, results2[0].secondaryBot, results2[0].tertiaryBot])
+            } else {
+                resolve()
+            }
+        })
+    }).then(async function(val) {
+        if (val == undefined) {
+            return [[], [], []]
+        } else {
+            const primaryBot = await new Promise((resolve) => {
+                connection.query("SELECT * FROM bot WHERE name=?", val[0], function (error, results2, fields) {
+                    if (results2.length > 0) {
+                        resolve(JSON.parse(results2[0].strategy))
+                    } else {
+                         resolve([])
+                    }
+                })
+            }).then((val) => {return val})
+            const secondaryBot = await new Promise((resolve) => {
+                connection.query("SELECT * FROM bot WHERE name=?", val[1], function (error, results2, fields) {
+                    if (results2.length > 0) {
+                        resolve(JSON.parse(results2[0].strategy))
+                    } else {
+                         resolve([])
+                    }
+                })
+            }).then((val) => {return val})
+            const tertiaryBot = await new Promise((resolve) => {
+                connection.query("SELECT * FROM bot WHERE name=?", val[2], function (error, results2, fields) {
+                    if (results2.length > 0) {
+                        resolve(JSON.parse(results2[0].strategy))
+                    } else {
+                         resolve([])
+                    }
+                })
+            }).then((val) => {return val})
+            return [primaryBot, secondaryBot, tertiaryBot]
+        }
+    })
+    const primaryBotStrategy = bots[0]
+    const secondaryBotStrategy = bots[1]
+    const tertiaryBotStrategy = bots[2]
     connection.end();
     if (stock.length < 1) {
         return {
@@ -240,7 +281,7 @@ export async function getServerSideProps(context, res) {
     const startGraphSize = 500
     return {
         props : {
-            stock, title, botStrategy, specificBotStrategy, startGraphSize,
+            stock, title, primaryBotStrategy, secondaryBotStrategy, tertiaryBotStrategy, startGraphSize,
         },
     }
 }

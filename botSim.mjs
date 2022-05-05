@@ -1,6 +1,10 @@
 // This will give how much the bot wants to buy or sell. This number is in the range of -1 to 1
 export function predict(botStrategy, time, stockData) {
-    let comparison = stockData[time - 1]
+    let comparison = 0.01
+    // Makes sure that the value of time is valid
+    if (time > 0) {
+        comparison = stockData[time - 1]
+    }
     let count = 1
     let total = 0
     botStrategy.forEach(element => {
