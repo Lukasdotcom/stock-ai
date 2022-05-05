@@ -44,7 +44,7 @@ const connection = createConnection({
     database : 'stock'
     });
 
-setInterval(findTaks, 10000)
+setInterval(findTasks, 10000)
 findTasks()
 // Finds a task to run
 function findTasks() {
