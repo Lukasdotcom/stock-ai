@@ -1,7 +1,7 @@
 import { parse } from "csv-parse";
 import { predict, simulateBot } from "../../botSim.mjs"
 import Head from 'next/head'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -12,7 +12,8 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-
+import { getSession } from "next-auth/react"
+import BotSettings from "../../components/BotSettings"
 import { Line } from 'react-chartjs-2';
 ChartJS.register(
 CategoryScale,
@@ -23,12 +24,26 @@ Title,
 Tooltip,
 Legend
 );
+// Function that will update the strategy in the UI botName is the new name of the bot and setState is which bot it is
+async function getStrategy(botName, stateSet) {
+    stateSet(await fetch(`/api/strategy/${botName}`).then((val) => {return val.json()}).then((val) => {return val}))
+}
 // Creates a simple graph with all the prices of the stock
-function Graph( { title, stock, primaryBotStrategy, secondaryBotStrategy, tertiaryBotStrategy, startGraphSize } ) {
+function Graph( { title, stock, startGraphSize, session, botNames } ) {
+    const [primaryBotStrategy, setPrimaryBotStrategy] = useState([]);
+    const [secondaryBotStrategy, setSecondaryBotStrategy] = useState([]);
+    const [tertiaryBotStrategy, setTertiaryBotStrategy] = useState([]);
+    // Makes sure to get the data for all the bots
+    useEffect(() => {
+        getStrategy(botNames[0], setPrimaryBotStrategy);
+        getStrategy(botNames[1], setSecondaryBotStrategy);
+        getStrategy(botNames[2], setTertiaryBotStrategy);
+        return () => {};
+      }, []);
     const primaryPrediciton = predict(primaryBotStrategy, stock.length, stock)
     const secondaryPrediction = predict(secondaryBotStrategy, stock.length, stock)
     const tertiaryPrediction = predict(tertiaryBotStrategy, stock.length, stock)
-    const [graphSize, setGraphSize] = useState(startGraphSize);
+    const [graphSize, setGraphSize] = useState(startGraphSize)
     // Makes sure that the graph has a valid value for its starting value
     const actualGraphSize = graphSize < stock.length ? (graphSize < 1 ? 1 : graphSize) : stock.length - 1
     // Calculates the primary bots values
@@ -148,6 +163,14 @@ function Graph( { title, stock, primaryBotStrategy, secondaryBotStrategy, tertia
             <p>Primary Bot purchase prediction: <d style={{color: primaryPrediciton>0 ? "green" : "red"}}>{ primaryPrediciton }</d></p>
             <p>Secondary Bot purchase prediction: <d style={{color: secondaryPrediction>0 ? "green" : "red"}}>{ secondaryPrediction }</d></p>
             <p>Tertiary Bot purchase prediction: <d style={{color: tertiaryPrediction>0 ? "green" : "red"}}>{ tertiaryPrediction }</d></p>
+            {session &&
+                // This is used to allow an admin to change the bots being used
+                <>
+                <h3>Change Bot being used</h3>
+                <p>To update please reload the page</p>
+                <BotSettings changeStrategy={getStrategy} strategies={[setPrimaryBotStrategy, setSecondaryBotStrategy, setTertiaryBotStrategy]} stock={title} />
+                </>
+            }
         </>
     )
   }
@@ -227,7 +250,7 @@ export async function getServerSideProps(context, res) {
         }).then((val => {return val}))
     }
     // Gets the bot data
-    const bots = await new Promise((resolve) => {
+    const botNames = await new Promise((resolve) => {
         connection.query("SELECT * FROM stockMeta WHERE ticker=?", [title], function (error, results2, fields) {
             if (results2.length > 0) {
                 resolve([results2[0].primaryBot, results2[0].secondaryBot, results2[0].tertiaryBot])
@@ -239,39 +262,9 @@ export async function getServerSideProps(context, res) {
         if (val == undefined) {
             return [[], [], []]
         } else {
-            const primaryBot = await new Promise((resolve) => {
-                connection.query("SELECT * FROM bot WHERE name=?", val[0], function (error, results2, fields) {
-                    if (results2.length > 0) {
-                        resolve(JSON.parse(results2[0].strategy))
-                    } else {
-                         resolve([])
-                    }
-                })
-            }).then((val) => {return val})
-            const secondaryBot = await new Promise((resolve) => {
-                connection.query("SELECT * FROM bot WHERE name=?", val[1], function (error, results2, fields) {
-                    if (results2.length > 0) {
-                        resolve(JSON.parse(results2[0].strategy))
-                    } else {
-                         resolve([])
-                    }
-                })
-            }).then((val) => {return val})
-            const tertiaryBot = await new Promise((resolve) => {
-                connection.query("SELECT * FROM bot WHERE name=?", val[2], function (error, results2, fields) {
-                    if (results2.length > 0) {
-                        resolve(JSON.parse(results2[0].strategy))
-                    } else {
-                         resolve([])
-                    }
-                })
-            }).then((val) => {return val})
-            return [primaryBot, secondaryBot, tertiaryBot]
+            return val
         }
     })
-    const primaryBotStrategy = bots[0]
-    const secondaryBotStrategy = bots[1]
-    const tertiaryBotStrategy = bots[2]
     connection.end();
     if (stock.length < 1) {
         return {
@@ -281,7 +274,7 @@ export async function getServerSideProps(context, res) {
     const startGraphSize = 500
     return {
         props : {
-            stock, title, primaryBotStrategy, secondaryBotStrategy, tertiaryBotStrategy, startGraphSize,
+            stock, title, botNames, startGraphSize, session : await getSession(context),
         },
     }
 }
