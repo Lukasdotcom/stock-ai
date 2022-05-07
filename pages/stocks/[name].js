@@ -160,7 +160,7 @@ function Graph( { title, stock, startGraphSize, session, botNames } ) {
             <h3>Set Number of Days for Graph</h3>
             <p>Warning it is very laggy when you scroll very far to the right side on the slider. Please click on the slider and don&apos;t slide.</p>
             <input type={"range"} style={{width: "100%"}} min={1} value={actualGraphSize} max={stock.length - 1} onChange={(val) => {setGraphSize(val.target.valueAsNumber)}}></input>
-            <p>Primary Bot purchase prediction: <d style={{color: primaryPrediciton>0 ? "green" : "red"}}>{ primaryPrediciton }</d></p>
+            <p>Primary Bot or bot  purchase prediction: <d style={{color: primaryPrediciton>0 ? "green" : "red"}}>{ primaryPrediciton }</d></p>
             <p>Secondary Bot purchase prediction: <d style={{color: secondaryPrediction>0 ? "green" : "red"}}>{ secondaryPrediction }</d></p>
             <p>Tertiary Bot purchase prediction: <d style={{color: tertiaryPrediction>0 ? "green" : "red"}}>{ tertiaryPrediction }</d></p>
             {session &&
@@ -168,7 +168,7 @@ function Graph( { title, stock, startGraphSize, session, botNames } ) {
                 <>
                 <h3>Change Bot being used</h3>
                 <p>To update please reload the page</p>
-                <BotSettings changeStrategy={getStrategy} strategies={[setPrimaryBotStrategy, setSecondaryBotStrategy, setTertiaryBotStrategy]} stock={title} />
+                <BotSettings changeStrategy={getStrategy} strategies={[setPrimaryBotStrategy, setSecondaryBotStrategy, setTertiaryBotStrategy]} stock={title} botNames={botNames} />
                 </>
             }
         </>

@@ -12,9 +12,10 @@ async function saveStrategy(botName, botLevel, stock) {
         })
     })
 }
-export default function Layout({changeStrategy, strategies, stock}) {
+export default function Layout({changeStrategy, strategies, stock, botNames}) {
     const [botLevel, setBotLevel] = useState(0)
     const [botName, setBotName] = useState('')
+    const [bots, setBots] = useState(botNames)
     return (
         <>
             <label for="bot">Bot type:</label>
@@ -24,10 +25,10 @@ export default function Layout({changeStrategy, strategies, stock}) {
                 <option value='2'>Tertiary Bot</option>
             </select>
             <br></br>
-            <label for="botName">Bot name:</label>
+            <label for="botName">Bot name(currently:{bots[botLevel]}):</label>
             <input id='botName' onChange={(val) => {setBotName(val.target.value)}}>
             </input>
-            <button onClick={(val) => {changeStrategy(botName, strategies[botLevel]); saveStrategy(botName, botLevel, stock)}}>Save</button>
+            <button onClick={(val) => {changeStrategy(botName, strategies[botLevel]); saveStrategy(botName, botLevel, stock); let newBots = bots; bots[botLevel] = botName; setBots(newBots);}}>Save</button>
         </>
     )
 }
