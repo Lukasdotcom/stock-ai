@@ -16,5 +16,6 @@ RUN npm install
 # Sets the default configuration
 ENV TYPE=production
 ENV ADMIN_PASSWORD=password
+ENV NEXTAUTH_SECRET=hkf9eUXAZKjw99/hZ4Rrw7aNe47qxB+QuojMwmxbFqA=
 CMD ./entrypoint.sh
 EXPOSE 3000
