@@ -1,8 +1,9 @@
+import {mysql_host, mysql_database, mysql_user, mysql_password} from "../../enviromental"
 import { parse } from "csv-parse";
 import { predict, simulateBot } from "../../botSim.mjs"
 import Head from 'next/head'
 import { useEffect, useState } from "react";
-import {
+import { 
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
@@ -180,10 +181,10 @@ export async function getServerSideProps(context, res) {
     const title = context.params.name
     var mysql = require('mysql');
     var connection = mysql.createConnection({
-        host     : '127.0.0.1',
-        user     : 'stock-ai',
-        password : "password",
-        database : 'stock'
+        host     : mysql_host,
+        user     : mysql_user,
+        password : mysql_password,
+        database : mysql_database
         });
     var prediction
     const cached = await new Promise((resolve) => connection.query("SELECT * FROM stockMeta WHERE ticker=?", [title], function (error, results, fields) {
@@ -214,10 +215,10 @@ export async function getServerSideProps(context, res) {
         // Checks that the stock exists
         if (stock.length > 0) {
             var connection2 = mysql.createConnection({
-                host     : '127.0.0.1',
-                user     : 'stock-ai',
-                password : "password",
-                database : 'stock'
+                host     : mysql_host,
+                user     : mysql_user,
+                password : mysql_password,
+                database : mysql_database
                 });
             // Adds the data to the database
             let count = 0

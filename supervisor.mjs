@@ -1,5 +1,6 @@
 import { predict } from "./botSim.mjs"
 import { createConnection } from "mysql"
+import {mysql_host, mysql_database, mysql_user, mysql_password} from "./enviromental.mjs"
 
 // Will simulate a bot and return the amount of money the bot would have earned.
 function simulateBot(stockData, botStrategy, start_time=10) {
@@ -38,14 +39,22 @@ function simulateGenerations (bot, data, generationSize, start_time, mutation) {
 }
 
 const connection = createConnection({
-    host     : '127.0.0.1',
-    user     : 'stock-ai',
-    password : "password",
-    database : 'stock'
+    host     : mysql_host,
+    user     : mysql_user,
+    password : mysql_password,
+    database : mysql_database
     });
-
+// Creates all the tables if they dont exist
+connection.query("CREATE TABLE IF NOT EXISTS stocks (ticker varchar(10), time int, close float)")
+connection.query("CREATE TABLE IF NOT EXISTS stockMeta (ticker varchar(10) PRIMARY KEY, lastUpdate int, primaryBot varchar(20), secondaryBot varchar(20), tertiaryBot varchar(20))")
+connection.query("CREATE TABLE IF NOT EXISTS bot (name varchar(20) PRIMARY KEY, strategy text)")
+connection.query("CREATE TABLE IF NOT EXISTS tasks (progress float, saveInterval int, botName varchar(20) PRIMARY KEY, strategy text, generationSize int, generations int, inUse bool, mutation float)")
+connection.query("CREATE TABLE IF NOT EXISTS taskStocks (name varchar(20), ticker varchar(10), start int, end int)")
+// Makes sure that all tasks are set as not in use
+connection.query("UPDATE tasks SET inUse=0")
+// Adds a simple default bot
+connection.query("INSERT IGNORE INTO bot VALUES ('', '[-5, 4, 3, 2, 1, 0]')")
 setInterval(findTasks, 10000)
-findTasks()
 // Finds a task to run
 function findTasks() {
     connection.query("SELECT * FROM tasks WHERE not inUse", function(error, results, fields) {

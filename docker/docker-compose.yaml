@@ -1,0 +1,30 @@
+version: "2.1"
+services:
+  stock-ai:
+    image: lukasdotcom/stock-ai
+    container_name: stock-ai
+    links:
+      - db
+    environment:
+      - TYPE=production # production for production and dev for development
+      - ADMIN_PASSWORD=password
+      - NEXTAUTH_URL=https://example.com # The url of the server
+      - NEXTAUTH_SECRET=hkf9eUXAZKjw99/hZ4Rrw7aNe47qxB+QuojMwmxbFqA=  # If this is for development you do not need to touch this but for production generate a new secret by running openssl rand -base64 32
+      - MYSQL_PASSWORD=password
+      - MYSQL_HOST=db
+      - MYSQL_DATABASE=stock
+    ports:
+      - 80:3000
+    restart: always
+  db:
+    image: mariadb
+    container_name: database
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=stock
+    restart: always
+    volumes:
+      - stock-ai:/var/lib/mysql
+volumes:
+  stock-ai:
+    external: true

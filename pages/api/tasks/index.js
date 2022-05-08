@@ -1,3 +1,4 @@
+import {mysql_host, mysql_database, mysql_user, mysql_password} from "../../../enviromental"
 import { getSession } from "next-auth/react"
 export default async function handler(req, res) {
     var mysql = require('mysql')
@@ -16,10 +17,10 @@ export default async function handler(req, res) {
                 if ((size > 0 && size < 1000000000) && (generations > 0 && generations < 1000000000) && (mutation > 0) && (saveInterval > 0) && (generationSize > 0 && generationSize < 10000000)) {
                     // Gets the source strategy
                     var connection = mysql.createConnection({
-                        host     : '127.0.0.1',
-                        user     : 'stock-ai',
-                        password : "password",
-                        database : 'stock'
+                        host     : mysql_host,
+                        user     : mysql_user,
+                        password : mysql_password,
+                        database : mysql_database
                         });
                     connection.query("SELECT strategy FROM bot WHERE name=?", [prevName], function(error, results) {
                         // Creates an empty strategy of the specified length if no source 

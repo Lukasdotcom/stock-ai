@@ -1,3 +1,4 @@
+import {mysql_host, mysql_database, mysql_user, mysql_password} from "../../../enviromental"
 import { getSession } from "next-auth/react"
 export default async function handler(req, res) {
     let bot = req.query.bot
@@ -6,10 +7,10 @@ export default async function handler(req, res) {
     // Makes sure the admin is logged in
     if (session) {
         var connection = mysql.createConnection({
-            host     : '127.0.0.1',
-            user     : 'stock-ai',
-            password : "password",
-            database : 'stock'
+            host     : mysql_host,
+            user     : mysql_user,
+            password : mysql_password,
+            database : mysql_database
             });
         switch (req.method) {
             case "GET": // Gets the training data for the bot
