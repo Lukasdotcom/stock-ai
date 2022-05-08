@@ -13,6 +13,7 @@ services:
       - MYSQL_PASSWORD=password
       - MYSQL_HOST=db
       - MYSQL_DATABASE=stock
+      - AUTO_UPDATE=false # Put this to true if you want the program to try to update itself everytime you start it(This may cause errors later on)
     ports:
       - 80:3000
     restart: always
