@@ -46,6 +46,18 @@ export default async function handler(req, res) {
                     res.status(500).end("Invalid request")
                 }
                 break;
+            case "GET":
+                var connection = mysql.createConnection({
+                    host     : mysql_host,
+                    user     : mysql_user,
+                    password : mysql_password,
+                    database : mysql_database
+                    });
+                connection.query("SELECT progress, botName, generations, inUse FROM tasks", function(error, results, fields) {
+                    res.status(200).json(results)
+                    connection.end()
+                })
+                break;
             default:
                 res.status(405).end(`Method ${req.method} Not Allowed`)
                 break;

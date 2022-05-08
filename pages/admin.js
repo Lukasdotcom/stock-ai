@@ -3,6 +3,7 @@ import Login from '../components/Login'
 import { SessionProvider, getSession } from "next-auth/react"
 import TaskCreater from "../components/TaskCreator"
 import TrainingDataCreator from "../components/TrainingDataCreator"
+import TaskList from "../components/TaskList"
 
 export default function Home({...pageProps}) {
     return (
@@ -18,7 +19,8 @@ export default function Home({...pageProps}) {
             {pageProps.session && 
             <>
             <p>Tasks are run with data under the training data center.</p>
-                <TaskCreater />
+            <TaskCreater />
+            <TaskList />
             </>
             }
         </div>
