@@ -17,5 +17,6 @@ RUN npm install
 ENV TYPE=production
 ENV ADMIN_PASSWORD=password
 ENV NEXTAUTH_SECRET=hkf9eUXAZKjw99/hZ4Rrw7aNe47qxB+QuojMwmxbFqA=
+ENV NEXTAUTH_URL=https://example.com
 CMD ./entrypoint.sh
 EXPOSE 3000
