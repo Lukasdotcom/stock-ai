@@ -11,14 +11,14 @@ export default async function handler(req, res) {
     if (req.method == "PUT") { 
         if (session) {
             if (req.body.botLevel > 2 || req.body.botLevel < 0) {
-                res.status(501)
+                res.status(500).end("Invalid request")
             } else {
                 const botLevel = ["primaryBot", "secondaryBot", "tertiaryBot"][req.body.botLevel]
                 connection.query(`UPDATE stockMeta SET ${botLevel}=? WHERE ticker=?`, [req.body.botName, req.query.stock])
-                res.status(200).json(req)
+                res.status(200).end("Updated data")
             }
         } else {
-            res.status(401)
+            res.status(401).end("Not logged in")
         }
     } else {
         res.status(405).end(`Method ${req.method} Not Allowed`)

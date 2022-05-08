@@ -6,10 +6,11 @@ import Router from 'next/router'
 const Layout = () => {
     async function search(val) {
         // Makes sure that only a small list of characters are allowed to make bugs less rare
-        val = val.replace(/[^a-z0-9\^]/gi, "")
+        val = val.replace(/[^a-z0-9\^\ ]/gi, "")
         var newSearchResult = []
         const same = val == searchTerm
         setNewSearchTerm(val)
+        // Only searches when neccessary
         if (val && val != "" && ! same) {
             const result = await fetch(`/api/search/${val}`)
             newSearchResult = await result.json()

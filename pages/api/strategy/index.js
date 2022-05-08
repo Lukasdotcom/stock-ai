@@ -8,7 +8,6 @@ export default async function handler(req, res) {
         database : 'stock'
         });
     const strategy = await new Promise((resolve) => {connection.query("SELECT strategy FROM bot WHERE name=?", [term], function (error, results2, fields) {
-        console.log(results2)
         if (results2.length > 0) {
             resolve(results2[0].strategy)
         } else {

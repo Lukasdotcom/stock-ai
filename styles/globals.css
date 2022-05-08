@@ -23,6 +23,15 @@ a {
   justify-content: center;
 }
 
+.red-button {
+  background-color: rgb(255, 0, 0);
+  border: 2px solid black;
+}
+
+.red-button:hover {
+  background-color: rgb(255, 55, 55);
+}
+
 button {
   color:white;
   background-color: rgb(0, 0, 255);

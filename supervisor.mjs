@@ -56,32 +56,38 @@ function findTasks() {
             let generation = Math.floor(task.progress * task.generations) // Stores the current generation
             let strategy = JSON.parse(task.strategy) // Used to store the name of the strategy
             connection.query("SELECT * FROM taskStocks WHERE name=?", [task.botName], async function(error, results, fields) {
-                while (generation < task.generations) { // Loops until all the generations are finished
-                    // Gets the closing prices for the range of data that was asked for
-                    let stock = results[Math.floor(results.length * Math.random())]
-                    let stockData = new Promise((resolve)=> {
-                        connection.query("SELECT * FROM stocks WHERE time<? and ticker=?", [stock.end, stock.ticker], function(error, results, fields) {
-                            resolve(results)
+                if (results.length > 0) {
+                    while (generation < task.generations) { // Loops until all the generations are finished
+                        // Gets the closing prices for the range of data that was asked for
+                        let stock = results[Math.floor(results.length * Math.random())]
+                        let stockData = new Promise((resolve)=> {
+                            connection.query("SELECT * FROM stocks WHERE time<? and ticker=?", [stock.end, stock.ticker], function(error, results, fields) {
+                                resolve(results)
+                            })
+                        }).then((val) => {
+                            let stockData = []
+                            val.forEach((val2) => {
+                                stockData.push(val2.close)
+                            })
+                            return stockData
                         })
-                    }).then((val) => {
-                        let stockData = []
-                        val.forEach((val2) => {
-                            stockData.push(val2.close)
-                        })
-                        return stockData
-                    })
-                    generation ++
-                    // Used to run simulation on bots
-                    strategy = simulateGenerations(strategy, await stockData, task.generationSize, stock.start, task.mutation)
-                    // Makes sure to update the task everytime it should be saved
-                    if (generation % task.saveInterval == 0) {
-                        connection.query("UPDATE tasks SET progress=?, strategy=? WHERE botName=?", [generation / task.generations, JSON.stringify(strategy), task.botName])
+                        generation ++
+                        // Used to run simulation on bots
+                        strategy = simulateGenerations(strategy, await stockData, task.generationSize, stock.start, task.mutation)
+                        // Makes sure to update the task everytime it should be saved
+                        if (generation % task.saveInterval == 0) {
+                            connection.query("UPDATE tasks SET progress=?, strategy=? WHERE botName=?", [generation / task.generations, JSON.stringify(strategy), task.botName])
+                        }
                     }
+                    // Will finish up the task and save the bot data
+                    connection.query("INSERT INTO bot VALUES (?, ?) ON DUPLICATE KEY UPDATE strategy=?", [task.botName, JSON.stringify(strategy), JSON.stringify(strategy)])
+                    connection.query("DELETE FROM tasks WHERE botName=?", [task.botName])
+                    console.log(`Finished task with name ${task.botName}`)
+                } else {
+                    connection.query("UPDATE tasks SET inUse=0 WHERE botName=?", [task.botName])
+                    console.log(`Failed to start task with name ${task.botName} due to no data existing for task to train on`)
                 }
-                // Will finish up the task and save the bot data
-                connection.query("INSERT INTO bot VALUES (?, ?) ON DUPLICATE KEY UPDATE strategy=?", [task.botName, JSON.stringify(strategy), JSON.stringify(strategy)])
-                connection.query("DELETE FROM tasks WHERE botName=?", [task.botName])
-                console.log(`Finished task with name ${task.botName}`)
+                
             })
         }
     })
