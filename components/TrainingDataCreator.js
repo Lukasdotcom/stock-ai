@@ -71,7 +71,7 @@ export default function Layout() {
     const [trainData, setTrainData] = useState([{"name":"Sample","ticker":"WM","start":12,"end":300}])
     // Does a search the first 
     useEffect(() => {
-        getTrainData(botName, setTrainData)
+        getTrainData("", setTrainData)
         return () => {};
       }, []);
     let key = 0
