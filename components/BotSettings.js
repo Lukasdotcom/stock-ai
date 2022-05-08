@@ -10,12 +10,11 @@ async function saveStrategy(botName, botLevel, stock) {
             "botName" : botName,
             "botLevel" : botLevel,
         })
-    }).then((response) => {if(!response.ok) {alert("Failed to save strategy")}})
+    }).then((response) => {if(!response.ok) {alert("Failed to save bot preference")}})
 }
-export default function Layout({changeStrategy, strategies, stock, botNames}) {
+export default function Layout({changeStrategy, strategies, stock, botNames, setBotNames}) {
     const [botLevel, setBotLevel] = useState(0)
     const [botName, setBotName] = useState('')
-    const [bots, setBots] = useState(botNames)
     return (
         <>
             <label htmlFor="bot">Bot type:</label>
@@ -25,10 +24,10 @@ export default function Layout({changeStrategy, strategies, stock, botNames}) {
                 <option value='2'>Tertiary Bot</option>
             </select>
             <br></br>
-            <label htmlFor="botName">Bot name(currently:{bots[botLevel]}):</label>
+            <label htmlFor="botName">Bot name(currently:{botNames[botLevel]}):</label>
             <input id='botName' onChange={(val) => {setBotName(val.target.value)}}>
             </input>
-            <button onClick={(val) => {changeStrategy(botName, strategies[botLevel]); saveStrategy(botName, botLevel, stock); let newBots = bots; bots[botLevel] = botName; setBots(newBots);}}>Save</button>
+            <button onClick={(val) => {changeStrategy(botName, strategies[botLevel]); saveStrategy(botName, botLevel, stock); let newBots = botNames; newBots[botLevel] = botName; setBotNames(newBots);}}>Save</button>
         </>
     )
 }

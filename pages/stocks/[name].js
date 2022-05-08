@@ -34,13 +34,15 @@ function Graph( { title, stock, startGraphSize, session, botNames } ) {
     const [primaryBotStrategy, setPrimaryBotStrategy] = useState([]);
     const [secondaryBotStrategy, setSecondaryBotStrategy] = useState([]);
     const [tertiaryBotStrategy, setTertiaryBotStrategy] = useState([]);
+    const [bots, setBots] = useState(botNames)
     // Makes sure to get the data for all the bots
     useEffect(() => {
+        setBots(botNames)
         getStrategy(botNames[0], setPrimaryBotStrategy);
         getStrategy(botNames[1], setSecondaryBotStrategy);
         getStrategy(botNames[2], setTertiaryBotStrategy);
         return () => {};
-      }, []);
+      }, botNames);
     const primaryPrediciton = predict(primaryBotStrategy, stock.length, stock)
     const secondaryPrediction = predict(secondaryBotStrategy, stock.length, stock)
     const tertiaryPrediction = predict(tertiaryBotStrategy, stock.length, stock)
@@ -169,7 +171,7 @@ function Graph( { title, stock, startGraphSize, session, botNames } ) {
                 <>
                 <h3>Change Bot being used</h3>
                 <p>To update please reload the page</p>
-                <BotSettings changeStrategy={getStrategy} strategies={[setPrimaryBotStrategy, setSecondaryBotStrategy, setTertiaryBotStrategy]} stock={title} botNames={botNames} />
+                <BotSettings changeStrategy={getStrategy} strategies={[setPrimaryBotStrategy, setSecondaryBotStrategy, setTertiaryBotStrategy]} stock={title} botNames={bots} setBotNames={setBots} />
                 </>
             }
         </>
