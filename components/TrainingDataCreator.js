@@ -72,8 +72,8 @@ export default function Layout() {
     // Does a search the first 
     useEffect(() => {
         getTrainData("", setTrainData)
-        return () => {};
-      }, []);
+        return () => {}
+      }, [])
     let key = 0
     return (
         <>

@@ -50,6 +50,7 @@ connection.query("CREATE TABLE IF NOT EXISTS stockMeta (ticker varchar(10) PRIMA
 connection.query("CREATE TABLE IF NOT EXISTS bot (name varchar(20) PRIMARY KEY, strategy text)")
 connection.query("CREATE TABLE IF NOT EXISTS tasks (progress float, saveInterval int, botName varchar(20) PRIMARY KEY, strategy text, generationSize int, generations int, inUse bool, mutation float)")
 connection.query("CREATE TABLE IF NOT EXISTS taskStocks (name varchar(20), ticker varchar(10), start int, end int)")
+connection.query("CREATE TABLE IF NOT EXISTS users (email varchar(255))")
 // Makes sure that all tasks are set as not in use
 connection.query("UPDATE tasks SET inUse=0")
 // Adds a simple default bot

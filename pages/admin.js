@@ -4,6 +4,7 @@ import { SessionProvider, getSession } from "next-auth/react"
 import TaskCreater from "../components/TaskCreator"
 import TrainingDataCreator from "../components/TrainingDataCreator"
 import TaskList from "../components/TaskList"
+import Users from "../components/Users"
 
 export default function Home({...pageProps}) {
     return (
@@ -27,6 +28,7 @@ export default function Home({...pageProps}) {
         {pageProps.session && 
         <div style={{"width" : "50%", "float" : "right"}}>
             <TrainingDataCreator />
+            <Users />
         </div>
         }
     </>
