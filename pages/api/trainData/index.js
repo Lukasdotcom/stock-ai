@@ -32,16 +32,16 @@ export default async function handler(req, res) {
                     if ((val.length > 0 && req.body.new.start > 0 ) && (req.body.new.end > 0 && req.body.new.end > req.body.new.start )) {
                         // Will delete the old data
                         connection.query("DELETE FROM taskStocks WHERE (ticker=? and name=?) and (start=? and end=?)", [req.body.old.ticker, bot, req.body.old.start, req.body.old.end], function(error, results3, fields) {
-                            resolve()
+                            resolve("Changed data")
                         })
                     } else {
                         console.log("ERROR")
                         throw "Invalid Values"
                     }
-                }).then(() => {
+                }).then((val) => {
                     // Will add the new data
                     connection.query("INSERT INTO taskStocks VALUES (?, ?, ?, ?)", [bot, req.body.new.ticker, req.body.new.start, req.body.new.end])
-                    res.status(200).end("Changed data")
+                    res.status(200).end(val)
                 }).catch((error) => {
                     res.status(500).end(error)
                 })
