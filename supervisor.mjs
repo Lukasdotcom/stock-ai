@@ -1,6 +1,7 @@
 import { predict } from "./botSim.mjs"
 import { createConnection } from "mysql"
-import {mysql_host, mysql_database, mysql_user, mysql_password} from "./enviromental.mjs"
+import { exec } from "child_process"
+import {mysql_host, mysql_database, mysql_user, mysql_password, auto_update} from "./enviromental.mjs"
 
 // Will simulate a bot and return the amount of money the bot would have earned.
 function simulateBot(stockData, botStrategy, start_time=10) {
@@ -37,7 +38,26 @@ function simulateGenerations (bot, data, generationSize, start_time, mutation) {
     }
     return bestBot
 }
-
+// Used to run the auto updating scripts if asked to
+if (auto_update == "true") {
+    exec("git pull", (error, stdout, stderror) => {
+        if (error) {
+          console.error("Error: ", error);
+          return;
+        }
+        console.log(stdout); // output from stdout
+        console.error(stderror); // std errors
+      })
+    exec("npm install", (error, stdout, stderror) => {
+        // if any error while executing
+        if (error) {
+          console.error("Error: ", error);
+          return;
+        }
+        console.log(stdout); // output from stdout
+        console.error(stderror); // std errors
+      })
+}
 const connection = createConnection({
     host     : mysql_host,
     user     : mysql_user,
