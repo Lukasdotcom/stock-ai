@@ -41,7 +41,7 @@ export default async function handler(req, res) {
                         strategy = JSON.stringify(strategy)
                         resolve(strategy)
                     })}).then((strategy) => {
-                        connection.query("INSERT INTO tasks VALUES(0, ?, ?, ?, ?, ?, 0, ?)", [saveInterval, name, strategy, generationSize, generations, mutation])
+                        connection.query("INSERT INTO tasks VALUES(0, ?, ?, ?, ?, ?, 0, ?, 0)", [saveInterval, name, strategy, generationSize, generations, mutation])
                         res.status(200).end("Added task succesfully")
                         connection.end()
                         return
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
                     database : mysql_database
                     });
                 // Used to return a list of tasks
-                await new Promise ((resolve) => {connection.query("SELECT progress, botName, generations, inUse FROM tasks", function(error, results, fields) {
+                await new Promise ((resolve) => {connection.query("SELECT progress, saveInterval, botName, generations, generations, inUse, previousTimeInterval FROM tasks", function(error, results, fields) {
                     resolve(results)
                 })}).then((val) => {
                     res.status(200).json(val)

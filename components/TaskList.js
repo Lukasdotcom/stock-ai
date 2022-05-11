@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { Line } from 'rc-progress'
 // UI for a single task
-function Task({ percent, name, inProgress, generations}) {
+function Task({ percent, name, inProgress, generations, timeEstimate}) {
+    let seconds = Math.ceil(timeEstimate % 60)
+    let minutes = Math.floor((timeEstimate % 3600)/60)
+    let hours = Math.floor((timeEstimate % 86400)/3600)
+    let days = Math.floor(timeEstimate/86400)
     return (
         <>
         <br></br>
@@ -10,7 +14,7 @@ function Task({ percent, name, inProgress, generations}) {
         <p>Progress: {Math.round(percent * generations)}/{generations}</p>
         <Line strokeWidth={4} percent={percent*100} strokeColor="rgb(0, 0, 255)" />
         { inProgress==1 &&
-            <p style={{"font-size" : "15px"}}>In progress</p>
+            <p>{days} days {hours} h {minutes} min {seconds} sec</p>
         }
         </>
     )
@@ -32,7 +36,7 @@ export default function Layout() {
         <>
         {tasks.map((element) => 
             // Creates an element for every task
-            <Task inProgress={element.inUse} percent={element.progress} name={element.botName} key={element.botName} generations={element.generations}/>
+            <Task inProgress={element.inUse} timeEstimate={ /*This calculates the amount of seconds left for the task*/(1-element.progress)*element.generations/element.saveInterval*element.previousTimeInterval} percent={element.progress} name={element.botName} key={element.botName} generations={element.generations}/>
         )}
         </>
     )

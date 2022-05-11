@@ -15,7 +15,7 @@ import {
 } from 'chart.js';
 import { getSession } from "next-auth/react"
 import BotSettings from "../../components/BotSettings"
-import { Line } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2'
 ChartJS.register(
 CategoryScale,
 LinearScale,
