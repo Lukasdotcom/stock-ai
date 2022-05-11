@@ -107,12 +107,21 @@ function findTasks() {
                             return stockData
                         })
                         generation ++
+                        // Checks if the task has been canceled
+                        let canceled = new Promise((resolve) => {connection.query("SELECT * FROM tasks WHERE botName=?", [task.botName], function(error, results, fields) {resolve(results)})}).then((results) => {
+                            return results.length < 1
+                        })
                         // Used to run simulation on bots
                         strategy = simulateGenerations(strategy, await stockData, task.generationSize, stock.start, task.mutation)
                         // Makes sure to update the task everytime it should be saved
                         if (generation % task.saveInterval == 0) {
                             connection.query("UPDATE tasks SET progress=?, strategy=?, previousTimeInterval=? WHERE botName=?", [generation / task.generations, JSON.stringify(strategy), (Date.now()-startTime)/1000, task.botName])
                             startTime = Date.now()
+                        }
+                        // Ends the task if canceled
+                        if (await canceled) {
+                            generation = task.generations
+                            console.log(`Cancelled task with name ${task.botName}`)
                         }
                     }
                     // Will finish up the task and save the bot data

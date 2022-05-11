@@ -16,6 +16,13 @@ function Task({ percent, name, inProgress, generations, timeEstimate}) {
         { inProgress==1 &&
             <p>{days} days {hours} h {minutes} min {seconds} sec</p>
         }
+        <button onClick={() => {
+            /*Button used to cancel task*/
+            fetch('/api/tasks', {
+                method : "DELETE",
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({"name" : name})
+            })}}className="red-button">Cancel</button>
         </>
     )
 }

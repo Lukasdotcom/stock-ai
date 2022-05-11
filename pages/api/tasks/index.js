@@ -1,6 +1,5 @@
 import {mysql_host, mysql_database, mysql_user, mysql_password} from "../../../enviromental"
 import { getSession } from "next-auth/react"
-import { resolveHref } from "next/dist/shared/lib/router/router"
 export default async function handler(req, res) {
     var mysql = require('mysql')
     const session = await getSession({ req })
@@ -65,6 +64,22 @@ export default async function handler(req, res) {
                 })
                 connection.end()
                 break;
+            case "DELETE":
+                // Used to cancel a task
+                var connection = mysql.createConnection({
+                    host     : mysql_host,
+                    user     : mysql_user,
+                    password : mysql_password,
+                    database : mysql_database
+                    });
+                // Used to return a list of tasks
+                await new Promise ((resolve) => {connection.query("SELECT progress, saveInterval, botName, generations, generations, inUse, previousTimeInterval FROM tasks", function(error, results, fields) {
+                    resolve(results)
+                })}).then((val) => {
+                    res.status(200).json(val)
+                })
+                connection.query("DELETE FROM tasks WHERE botName=?", [String(req.body.name)], function() {connection.end()})
+                res.status(200).end("Cancelled task")
             default:
                 res.status(405).end(`Method ${req.method} Not Allowed`)
                 break;
